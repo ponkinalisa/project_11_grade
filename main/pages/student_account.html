@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет | Образовательная платформа</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/student_account.css">
+</head>
+<body>
+    <!-- Шапка -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">E</div>
+                    <div class="logo-text">EduTest</div>
+                </div>
+                
+                <nav class="nav-links">
+                    <a href="#" class="nav-link">Главная</a>
+                    <a href="#" class="nav-link">Тесты</a>
+                    <a href="#" class="nav-link active">Личный кабинет</a>
+                    <a href="#" class="nav-link">Рейтинг</a>
+                </nav>
+                
+                <div class="user-menu">
+                    <div class="user-info">
+                        <div class="user-avatar">А</div>
+                        <div class="user-name">Александр Петров</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Основной контент -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Заголовок страницы -->
+            <div class="page-header">
+                <h1>Личный кабинет</h1>
+                <a href="#" class="back-btn">← На главную</a>
+            </div>
+            
+            <div class="profile-layout">
+                <!-- Левая колонка - информация о пользователе -->
+                <div class="profile-sidebar">
+                    <div class="profile-card">
+                        <div class="profile-header">
+                            <div class="profile-avatar">А</div>
+                            <div>
+                                <div class="profile-name">Александр Петров</div>
+                                <div class="profile-role">Ученик</div>
+                            </div>
+                        </div>
+                        
+                        <div class="profile-info">
+                            <div class="info-item">
+                                <div class="info-label">ФИО</div>
+                                <div class="info-value">Петров Александр Сергеевич</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Школа</div>
+                                <div class="info-value">ГБОУ "Школа № 1234"</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Класс</div>
+                                <div class="info-value">10 "А"</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Email</div>
+                                <div class="info-value">a.petrov@school1234.ru</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Дата регистрации</div>
+                                <div class="info-value">15 сентября 2023</div>
+                            </div>
+                        </div>
+                        
+                        <button class="edit-btn">Редактировать профиль</button>
+                    </div>
+                    
+                    <div class="profile-card">
+                        <h3 class="card-title">Быстрый доступ</h3>
+                        <div class="info-item">
+                            <div class="info-label">Активных тестов</div>
+                            <div class="info-value">3</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Следующий тест</div>
+                            <div class="info-value">Математика - 25 ноября</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Моя позиция в рейтинге</div>
+                            <div class="info-value">12 из 145</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Правая колонка - статистика и активность -->
+                <div class="profile-main">
+                    <div class="stats-card">
+                        <div class="card-header">
+                            <h2 class="card-title">Статистика успеваемости</h2>
+                            <div class="period-selector">
+                                <button class="period-btn active">Неделя</button>
+                                <button class="period-btn">Месяц</button>
+                                <button class="period-btn">Год</button>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-container">
+                            <canvas id="progressChart"></canvas>
+                        </div>
+                        
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-value">87%</div>
+                                <div class="stat-label">Средний балл</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">15</div>
+                                <div class="stat-label">Пройдено тестов</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">92%</div>
+                                <div class="stat-label">Лучший результат</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">5</div>
+                                <div class="stat-label">Дней активности</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="recent-tests">
+                        <h2 class="card-title">Последние тесты</h2>
+                        <div class="test-list">
+                            <div class="test-item">
+                                <div class="test-info">
+                                    <div class="test-name">Физика: Законы Ньютона</div>
+                                    <div class="test-date">20 ноября 2023</div>
+                                </div>
+                                <div class="test-score">92%</div>
+                            </div>
+                            <div class="test-item">
+                                <div class="test-info">
+                                    <div class="test-name">Литература: Творчество Пушкина</div>
+                                    <div class="test-date">18 ноября 2023</div>
+                                </div>
+                                <div class="test-score">78%</div>
+                            </div>
+                            <div class="test-item">
+                                <div class="test-info">
+                                    <div class="test-name">История: Древняя Русь</div>
+                                    <div class="test-date">15 ноября 2023</div>
+                                </div>
+                                <div class="test-score">85%</div>
+                            </div>
+                            <div class="test-item">
+                                <div class="test-info">
+                                    <div class="test-name">Математика: Геометрия</div>
+                                    <div class="test-date">12 ноября 2023</div>
+                                </div>
+                                <div class="test-score">90%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Подвал -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="copyright">
+                    © 2023 Образовательная платформа EduTest. Все права защищены.
+                </div>
+                <div class="footer-links">
+                    <a href="#" class="footer-link">Помощь</a>
+                    <a href="#" class="footer-link">О системе</a>
+                    <a href="#" class="footer-link">Контакты</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Инициализация графика
+        const ctx = document.getElementById('progressChart').getContext('2d');
+        const progressChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['15 ноя', '16 ноя', '17 ноя', '18 ноя', '19 ноя', '20 ноя', '21 ноя'],
+                datasets: [{
+                    label: 'Успеваемость, %',
+                    data: [75, 80, 82, 78, 85, 92, 87],
+                    borderColor: '#3B82F6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#3B82F6',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                        titleFont: {
+                            size: 14
+                        },
+                        bodyFont: {
+                            size: 14
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 50,
+                        max: 100,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // Обработчики кнопок выбора периода
+        const periodButtons = document.querySelectorAll('.period-btn');
+        periodButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                periodButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Здесь будет обновление данных графика в зависимости от выбранного периода
+                alert('Показаны данные за выбранный период: ' + this.textContent);
+            });
+        });
+
+        // Обработчик кнопки редактирования профиля
+        document.querySelector('.edit-btn').addEventListener('click', function() {
+            alert('Редактирование профиля');
+            // Здесь будет переход на страницу редактирования профиля
+        });
+    </script>
+</body>
+</html>
