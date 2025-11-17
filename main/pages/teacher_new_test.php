@@ -1,0 +1,405 @@
+<?php
+# require_once '../php/config.php';
+
+
+// Проверяем, был ли отправлен POST-запрос с данными для регистрации
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    foreach ($_POST as $value => $key) {
+    echo $value;
+    echo '<br>';
+    echo $key;
+    echo '<br>';
+}
+}
+?>
+
+
+
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Создание теста | Образовательная платформа</title>
+    <link rel="stylesheet" type="text/css" href="../css/new_test.css">
+</head>
+<body>
+    <!-- Шапка -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">E</div>
+                    <div class="logo-text">EduTest</div>
+                </div>
+                
+                <div class="user-menu">
+                    <div class="user-info">
+                        <div class="user-avatar">И</div>
+                        <div class="user-name">Ирина Смирнова</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Основной контент -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Заголовок страницы -->
+            <div class="page-header">
+                <h1>Создание нового теста</h1>
+                <a href="#" class="back-btn">← Назад к тестам</a>
+            </div>
+            
+            <div class="form-container">
+                <form enctype="multipart/form-data" action="teacher_new_test.php" method="post">
+                <!-- Основная информация о тесте -->
+                <div class="form-section">
+                    <h2 class="section-title">
+                        <span class="section-title-icon">📝</span>
+                        Основная информация
+                    </h2>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="testName">Название теста *</label>
+                            <input type="text" id="testName" placeholder="Введите название теста" name="test_name" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="testDescription">Описание теста</label>
+                        <textarea id="testDescription" placeholder="Опишите содержание теста, его цели и задачи" name="test_description"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="testTime">Время на выполнение (минут) *</label>
+                        <input type="number" id="testTime" min="1" max="180" value="45" name="test_time" required>
+                    </div>
+                </div>
+                
+                <!-- Критерии оценки -->
+                <div class="form-section">
+                    <h2 class="section-title">
+                        <span class="section-title-icon">📊</span>
+                        Критерии оценки
+                    </h2>
+                    
+                    <p style="margin-bottom: 20px; color: var(--text-secondary);">
+                        Укажите минимальный процент выполнения для каждой оценки по 5-балльной шкале
+                    </p>
+                    
+                    <div class="criteria-grid">
+                        <div class="criteria-item">
+                            <div class="criteria-label">Оценка "5"</div>
+                            <div class="criteria-input">
+                                <input type="number" id="grade5" min="0" max="100" value="85" name="grade5">
+                                <span>%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="criteria-item">
+                            <div class="criteria-label">Оценка "4"</div>
+                            <div class="criteria-input">
+                                <input type="number" id="grade4" min="0" max="100" value="65" name="grade4">
+                                <span>%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="criteria-item">
+                            <div class="criteria-label">Оценка "3"</div>
+                            <div class="criteria-input">
+                                <input type="number" id="grade3" min="0" max="100" value="45" name="grade3">
+                                <span>%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                        Оценка "2" выставляется автоматически при результате ниже <span id="grade2Value">45%</span>
+                    </div>
+                </div>
+                
+                <!-- Структура теста -->
+                <div class="form-section">
+                    <h2 class="section-title">
+                        <span class="section-title-icon">🔧</span>
+                        Структура теста
+                    </h2>
+                    
+                    <p style="margin-bottom: 20px; color: var(--text-secondary);">
+                        Добавьте типы заданий и наполните их вопросами
+                    </p>
+                    
+                    <div class="task-types" id="taskTypes">
+                        <!-- Тип задания 1 -->
+                        <div class="task-type-card">
+                            <div class="task-type-header">
+                                <div class="task-type-title">Тип задания 1</div>
+                                <div class="task-type-controls">
+                                    <div class="task-weight">
+                                        <label for="taskWeight1">Количество заданий этого типа в тесте:</label>
+                                        <input type="number" id="taskWeight1" min="1" value="1" name="count_type_1">
+                                    </div>
+                                    <div class="icon-btn delete-btn" onclick="deleteTaskType(this, 1)">🗑️</div>
+                                </div>
+                            </div>
+                            
+                            <div class="task-weight">
+                                <label for="taskWeight1">Вес в баллах:</label>
+                                <input type="number" id="taskWeight1" min="1" value="1" name="type_1_weight">
+                            </div>
+                            
+                            <div class="tasks-list">
+                                <!-- Задания -->
+                                <div class="task-item">
+                                    <div class="task-header">
+                                        <div class="task-number">Задание 1</div>
+                                        <div class="task-type-controls">
+                                            <div class="icon-btn delete-btn" onclick="deleteTask(this, 1)">🗑️</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="task-content">
+                                        <div class="form-group">
+                                            <label>Текст задания</label>
+                                            <textarea placeholder="Введите текст задания" name="type_1_task_1_text"></textarea>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label>Правильный ответ</label>
+                                            <textarea placeholder="Введите правильный ответ" name="type_1_task_1_answer"></textarea>
+                                        </div>
+                                        
+                                        <div class="image-upload">
+                                            <label>Изображение к заданию (опционально)</label>
+                                            <input type="file" accept="image/*" onchange="previewImage(this)" name="type_1_task_1_image">
+                                            <img class="image-preview" src="" alt="Предпросмотр">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="add-task-btn" onclick="addTask(this)">+ Добавить задание</div>
+                        </div>
+                    </div>
+                    
+                    <div class="add-type-btn" onclick="addTaskType()">
+                        <span>+</span>
+                        <span>Добавить тип задания</span>
+                    </div>
+                </div>
+                
+                <!-- Кнопки действий -->
+                <div class="form-actions">
+                    <button class="cancel-btn">Отмена</button>
+                    <button class="save-btn" type="submit">Сохранить тест</button>
+                </div>
+            </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Подвал -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="copyright">
+                    © 2023 Образовательная платформа EduTest. Все права защищены.
+                </div>
+                <div class="footer-links">
+                    <a href="#" class="footer-link">Помощь</a>
+                    <a href="#" class="footer-link">О системе</a>
+                    <a href="#" class="footer-link">Контакты</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        let taskTypeCount = 1;
+        let taskCounts = {1: 1}; // Начальное количество заданий для первого типа
+        
+        // Обновление значения для оценки "2"
+        function updateGrade2Value() {
+            const grade3Value = document.getElementById('grade3').value;
+            document.getElementById('grade2Value').textContent = grade3Value + '%';
+        }
+        
+        // Предпросмотр изображения
+        function previewImage(input) {
+            const preview = input.parentElement.querySelector('.image-preview');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+        
+        // Добавление нового типа задания
+        function addTaskType() {
+            taskTypeCount++;
+            taskCounts[taskTypeCount] = 1;
+            
+            const taskTypesContainer = document.getElementById('taskTypes');
+            const newTaskType = document.createElement('div');
+            newTaskType.className = 'task-type-card';
+            newTaskType.innerHTML = `
+                <div class="task-type-header">
+                                <div class="task-type-title">Тип задания ${taskTypeCount}</div>
+                                <div class="task-type-controls">
+                                    <div class="task-weight">
+                                        <label for="taskWeight1">Количество заданий этого типа в тесте:</label>
+                                        <input type="number" id="taskWeight1" min="1" value="1" name="count_type_${taskTypeCount}">
+                                    </div>
+                                    <div class="icon-btn delete-btn" onclick="deleteTaskType(this, ${taskTypeCount})">🗑️</div>
+                                </div>
+                            </div>
+                            
+                            <div class="task-weight">
+                                <label for="taskWeight1">Вес в баллах:</label>
+                                <input type="number" id="taskWeight1" min="1" value="1" name="type_${taskTypeCount}_weight">
+                            </div>
+                            
+                            <div class="tasks-list">
+                                <!-- Задания -->
+                                <div class="task-item">
+                                    <div class="task-header">
+                                        <div class="task-number">Задание 1</div>
+                                        <div class="task-type-controls">
+                                            <div class="icon-btn delete-btn" onclick="deleteTask(this, 1)">🗑️</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="task-content">
+                                        <div class="form-group">
+                                            <label>Текст задания</label>
+                                            <textarea placeholder="Введите текст задания" name="type_${taskTypeCount}_task_1_text"></textarea>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label>Правильный ответ</label>
+                                            <textarea placeholder="Введите правильный ответ" name="type_${taskTypeCount}_task_1_answer"></textarea>
+                                        </div>
+                                        
+                                        <div class="image-upload">
+                                            <label>Изображение к заданию (опционально)</label>
+                                            <input type="file" accept="image/*" onchange="previewImage(this)" name="type_${taskTypeCount}_task_1_image">
+                                            <img class="image-preview" src="" alt="Предпросмотр">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="add-task-btn" onclick="addTask(this)">+ Добавить задание</div>
+            `;
+            
+            taskTypesContainer.appendChild(newTaskType);
+        }
+        
+        // Удаление типа задания
+        function deleteTaskType(button, n) {
+            if (document.querySelectorAll('.task-type-card').length > 1) {
+                for (let i = n; i < document.querySelectorAll('.task-type-card').length; i++) {
+                    document.getElementsByClassName("task-type-card")[i].innerHTML = document.getElementsByClassName("task-type-card")[i].innerHTML.replace('Тип задания ' + (i + 1), 'Тип задания ' + i);
+                    document.getElementsByClassName("task-type-card")[i].innerHTML = document.getElementsByClassName("task-type-card")[i].innerHTML.replace('deleteTaskType(this, ' + (i + 1) + ')', 'deleteTaskType(this, ' + i + ')');
+                    document.getElementsByClassName("task-type-card")[i].innerHTML = document.getElementsByClassName("task-type-card")[i].innerHTML.replace('type_' + (i + 1), 'type_' + i);
+                }
+                button.closest('.task-type-card').remove();
+                taskTypeCount--;
+            } else {
+                alert('Должен остаться хотя бы один тип задания');
+            }
+        }
+        
+        // Добавление нового задания
+        function addTask(button) {
+            const taskTypeCard = button.closest('.task-type-card');
+            const taskTypeHeader = taskTypeCard.querySelector('.task-type-title');
+            const taskTypeNumber = taskTypeHeader.textContent.match(/\d+/)[0];
+            
+            taskCounts[taskTypeNumber]++;
+            const taskNumber = taskCounts[taskTypeNumber];
+            
+            const tasksList = taskTypeCard.querySelector('.tasks-list');
+            const newTask = document.createElement('div');
+            newTask.className = 'task-item';
+            newTask.innerHTML = `
+                                    <div class="task-header">
+                                        <div class="task-number">Задание ${taskNumber}</div>
+                                        <div class="task-type-controls">
+                                            <div class="icon-btn delete-btn" onclick="deleteTask(this, ${taskNumber})">🗑️</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="task-content">
+                                        <div class="form-group">
+                                            <label>Текст задания</label>
+                                            <textarea placeholder="Введите текст задания" name="type_${taskTypeNumber}_task_${taskNumber}_text"></textarea>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label>Правильный ответ</label>
+                                            <textarea placeholder="Введите правильный ответ" name="type_${taskTypeNumber}_task_${taskNumber}_answer"></textarea>
+                                        </div>
+                                        
+                                        <div class="image-upload">
+                                            <label>Изображение к заданию (опционально)</label>
+                                            <input type="file" accept="image/*" onchange="previewImage(this)" name="type_${taskTypeNumber}_task_${taskNumber}_image">
+                                            <img class="image-preview" src="" alt="Предпросмотр">
+                                        </div>
+                                    </div>
+            `;
+            
+            tasksList.appendChild(newTask);
+        }
+        
+        // Удаление задания
+        function deleteTask(button, n) {
+            const taskItem = button.closest('.task-item');
+            const tasksList = taskItem.parentElement;
+            
+            if (tasksList.querySelectorAll('.task-item').length > 1) {
+                for (let i = n; i < tasksList.querySelectorAll('.task-item').length; i++) {
+                    tasksList.getElementsByClassName("task-item")[i].innerHTML = tasksList.getElementsByClassName("task-item")[i].innerHTML.replace('Задание ' + (i + 1), 'Задание ' + i);
+                    tasksList.getElementsByClassName("task-item")[i].innerHTML = tasksList.getElementsByClassName("task-item")[i].innerHTML.replace('deleteTask(this, ' + (i + 1) + ')', 'deleteTask(this, ' + i + ')');
+                    tasksList.getElementsByClassName("task-item")[i].innerHTML = tasksList.getElementsByClassName("task-item")[i].innerHTML.replace('task_' + (i + 1), 'task_' + i);
+                }
+                taskItem.remove();
+                const taskTypeHeader = tasksList.parentElement.querySelector('.task-type-title');
+                const taskTypeNumber = taskTypeHeader.textContent.match(/\d+/)[0];
+               
+                taskCounts[taskTypeNumber]--;
+            } else {
+                alert('Должно остаться хотя бы одно задание в типе');
+            }
+        }
+        
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            updateGrade2Value();
+            
+            // Обновление значения оценки "2" при изменении оценки "3"
+            document.getElementById('grade3').addEventListener('input', updateGrade2Value);
+            
+            // Обработчик сохранения теста
+            document.querySelector('.save-btn').addEventListener('click', function() {
+                // Здесь будет логика сохранения теста
+                alert('Тест успешно сохранен!');
+            });
+            
+            // Обработчик отмены
+            document.querySelector('.cancel-btn').addEventListener('click', function() {
+                if (confirm('Вы уверены, что хотите отменить создание теста? Все несохраненные данные будут потеряны.')) {
+                    window.history.back();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
