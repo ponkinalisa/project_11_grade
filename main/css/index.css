@@ -81,14 +81,10 @@ h1 {
     margin-bottom: 25px;
 }
 
-.error{
+.error-message{
     margin: 30px;
     text-align: center;
     color: #bc1b1b;
-}
-
-.form-group .error{
-    border: 1px solid #ff5c5c;
 }
 
 
@@ -116,6 +112,10 @@ input[type="password"]:focus {
     border-color: #3B82F6;
     background-color: white;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-group .error{
+    border: 1px solid #ff5c5c;
 }
 
 .login-btn {

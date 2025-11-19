@@ -73,10 +73,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $i = $main['i'];
         $f = $main['f'];
         $o = $main['o'];
-        if (strpos($main['group'], 'Учен') != false){
+        if (strpos($main['group'], 'чен') != false){
             $status = 'student';
         }else{
-            if (strpos($main['group'], 'Админ') != false){
+            if (strpos($main['group'], 'дмин') != false){
                 $status = 'admin';
             }else{
                 $status = 'teacher';
