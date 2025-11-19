@@ -81,6 +81,17 @@ h1 {
     margin-bottom: 25px;
 }
 
+.error{
+    margin: 30px;
+    text-align: center;
+    color: #bc1b1b;
+}
+
+.form-group .error{
+    border: 1px solid #ff5c5c;
+}
+
+
 label {
     display: block;
     margin-bottom: 8px;

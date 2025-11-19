@@ -1,10 +1,24 @@
+<?php
+$error = false;
+echo($_SERVER['REQUEST_METHOD']);
+// Проверяем, был ли отправлен POST-запрос с данными для регистрации
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    echo 1;
+}
+echo 0;
+
+
+?>
+
+
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Система тестирования для школьников</title>
-    <link rel="stylesheet" type="text/css" href="main/css/index.css">
+     <!--<link rel="stylesheet" type="text/css" href="main/css/index.css">-->
 </head>
 <body>
     <div class="container">
@@ -43,16 +57,18 @@
         <!-- Правая часть - форма авторизации -->
         <div class="auth-section">
             <h2 class="auth-title">Вход в систему</h2>
-            <form id="loginForm">
-                <div class="form-group">
+            <form id="loginForm" action="i.php" method="post">
+                <div class="form-group <?php if ($error){echo('error');} ?>">
                     <label for="username">Логин</label>
                     <input type="text" id="username" name="username" placeholder="Введите ваш логин" required>
                 </div>
                 
-                <div class="form-group">
+                <div class="form-group <?php if ($error){echo('error');} ?>">
                     <label for="password">Пароль</label>
                     <input type="password" id="password" name="password" placeholder="Введите ваш пароль" required>
                 </div>
+
+                <?php if ($error){echo('<div class="error-message">Неверный логин или пароль</div>');} ?>
                 
                 <button type="submit" class="login-btn">Войти в систему</button>
                 
@@ -73,9 +89,6 @@
             
             // Здесь будет логика авторизации
             console.log('Попытка входа:', { username, password });
-            
-            // Временное сообщение об успехе
-            alert('Форма готова к интеграции с системой авторизации!');
         });
     </script>
 </body>
