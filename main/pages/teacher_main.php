@@ -1,3 +1,19 @@
+<?php 
+require_once '../php/config.php';
+
+session_start();
+
+if (!isset($_SESSION['login'])){
+    header('Location: ../../index.php');
+    exit;
+}
+
+# работа с бд для вывода тестов пользователя
+
+?>
+
+
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -26,8 +42,8 @@
                 
                 <div class="user-menu">
                     <div class="user-info">
-                        <div class="user-avatar">И</div>
-                        <div class="user-name">Ирина Смирнова</div>
+                        <div class="user-avatar"><?php echo(mb_substr($_SESSION['i'], 0, 1) . mb_substr($_SESSION['f'], 0, 1)); ?></div>
+                        <div class="user-name"><?php echo($_SESSION['i'] . ' ' . $_SESSION['f']); ?></div>
                     </div>
                 </div>
             </div>
@@ -40,10 +56,10 @@
             <!-- Заголовок страницы -->
             <div class="page-header">
                 <h1>Панель управления педагога</h1>
-                <button class="add-test-btn" id="addTestBtn">
+                <a class="add-test-btn" id="addTestBtn" href="teacher_new_test.php" style="text-decoration: none">
                     <span>+</span>
                     <span>Создать тест</span>
-                </button>
+                </a>
             </div>
             
             <!-- Вкладки -->
@@ -258,12 +274,7 @@
             });
         });
         
-        // Обработчик кнопки создания теста
-        document.getElementById('addTestBtn').addEventListener('click', function() {
-            alert('Создание нового теста');
-            // Здесь будет переход на страницу создания теста
-        });
-        
+
         // Обработчики кнопок тестов
         const editButtons = document.querySelectorAll('.edit-btn');
         editButtons.forEach(button => {

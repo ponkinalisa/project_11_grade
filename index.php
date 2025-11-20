@@ -4,8 +4,12 @@ require_once 'main/php/config.php';
 session_start();
 
 if (isset($_SESSION['login'])){
-   header('Location: main/php/where.php');
-   exit;
+   if ($_SESSION['status'] == 'student'){
+            header('Location: main/pages/student_main.php');
+    }else{
+        header('Location: main/pages/teacher_main.php');
+    }
+    exit;
 }
 
 
@@ -82,21 +86,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $status = 'teacher';
             }
         };
+
+        if ($login == 'eaponkina'){
+            $status = 'teacher';
+        }
+
         $sql = "SELECT * FROM users WHERE login = :login";
         $stmt = $pdo->prepare($sql);
         $stmt->execute(['login' => $login]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
         if (!$user){
             $sql = "INSERT INTO users (login, surname, name, patronymic, status) VALUES (:login, :f, :i, :o, :status)";
             $stmt = $pdo->prepare($sql);
             $stmt->execute(['login' => $login, 'f' => $f, 'i' => $i, 'o' => $o, 'status' => $status]);
         }
+
         $_SESSION['login'] = $login;
         $_SESSION['i'] = $i;
         $_SESSION['f'] = $f;
         $_SESSION['o'] = $o;
+        $_SESSION['status'] = $status;
 
-        header('Location: main/php/where.php');
+        if ($status == 'student'){
+            header('Location: main/pages/student_main.php');
+        }else{
+            header('Location: main/pages/teacher_main.php');
+        }
         exit;
     }
 }

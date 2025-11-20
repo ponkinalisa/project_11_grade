@@ -1,15 +1,57 @@
 <?php
-# require_once '../php/config.php';
+require_once '../php/config.php';
 
+session_start();
+
+if (!isset($_SESSION['login'])){
+    header('Location: ../../index.php');
+    exit;
+}
 
 // Проверяем, был ли отправлен POST-запрос с данными для регистрации
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $test_name = $_POST['test_name'];
+    $test_description = $_POST['test_description'];
+    $test_time = $_POSt['test_time'];
+    $grade5 = $_POST['grade5'];
+    $grade4 = $_POST['grade4'];
+    $grade3 = $_POST['grade3'];
+
+    $types_arr = array();
+    $tasks_arr = array();
+
+    $task = 1;
+    $type = 1;
+    $i = 0;
+
     foreach ($_POST as $value => $key) {
-    echo $value;
-    echo '<br>';
-    echo $key;
-    echo '<br>';
-}
+        echo($value);
+        echo('<br>');
+        if ("count_type_" . ($type - 1) == $value){
+            $type = $type + 1;
+            $task = 1;
+        }
+        if ("count_type_" . $type == $value){
+            $types_arr[$type] = ['count' => $key];
+        }
+        if ("type_" . $type . "_weight" == $value){
+            $types_arr[$type] = array_merge(['weight' => $key], $types_arr[$type]);
+        }
+        if ("type_".$type."_task_".$task."_text" == $value){
+            $tasks_arr[$i] = array('type' => $type, 'text' => $key);
+        }
+        if ("type_".$type."_task_".$task."_answer" == $value){
+            $tasks_arr[$i] = array_merge(['answer' => $key], $tasks_arr[$i]);
+            $task = $task + 1;
+            $i += 1;
+        }
+        print_r($tasks_arr);
+        echo('<br>');
+        print_r($types_arr);
+        echo('<br>');
+    }
+    print_r($tasks_arr);
+    print_r($types_arr);
 }
 ?>
 
@@ -36,8 +78,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 <div class="user-menu">
                     <div class="user-info">
-                        <div class="user-avatar">И</div>
-                        <div class="user-name">Ирина Смирнова</div>
+                        <div class="user-avatar"><?php echo(mb_substr($_SESSION['i'], 0, 1) . mb_substr($_SESSION['f'], 0, 1)); ?></div>
+                        <div class="user-name"><?php echo($_SESSION['i'] . ' ' . $_SESSION['f']); ?></div>
                     </div>
                 </div>
             </div>
