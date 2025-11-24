@@ -100,8 +100,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $sql = "INSERT INTO users (login, surname, name, patronymic, status) VALUES (:login, :f, :i, :o, :status)";
             $stmt = $pdo->prepare($sql);
             $stmt->execute(['login' => $login, 'f' => $f, 'i' => $i, 'o' => $o, 'status' => $status]);
-        }
 
+            $sql = "SELECT * FROM users WHERE login = :login";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute(['login' => $login]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            $_SESSION['id'] = $user['id'];
+        }else{
+            $_SESSION['id'] = $user['id'];
+        }
         $_SESSION['login'] = $login;
         $_SESSION['i'] = $i;
         $_SESSION['f'] = $f;

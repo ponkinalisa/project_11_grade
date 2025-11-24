@@ -9,6 +9,11 @@ if (!isset($_SESSION['login'])){
 }
 
 # работа с бд для вывода тестов пользователя
+$sql = "SELECT * FROM tests WHERE author_id = :id";
+$stmt = $pdo->prepare($sql);
+$stmt->execute(['id' => $_SESSION['id']]);
+$tests = $stmt->fetchAll(PDO::FETCH_ASSOC);
+echo(count($tests));
 
 ?>
 
@@ -70,117 +75,61 @@ if (!isset($_SESSION['login'])){
             </div>
             
             <!-- Содержимое вкладки "Созданные тесты" -->
-            <div class="tab-content active" id="tests-tab">
+             <div class="tab-content active" id="tests-tab">
                 <div class="tests-grid">
-                    <!-- Тест 1 -->
-                    <div class="test-card">
-                        <div class="test-header">
-                            <span class="test-subject">Математика</span>
-                            <h3 class="test-title">Алгебраические выражения</h3>
-                            <div class="test-info">
-                                <span>15 вопросов</span>
-                                <span>Создан: 15.11.2023</span>
-                            </div>
-                        </div>
-                        <div class="test-body">
-                            <p class="test-description">
-                                Тест охватывает основные алгебраические операции, упрощение выражений и решение уравнений.
-                            </p>
-                            <div class="test-stats">
-                                <div class="test-stat">
-                                    <div class="stat-number">42</div>
+             <?php foreach ($tests as $test){
+                echo('<div class="test-card"><div class="test-header">');
+                if ($test['is_active']){
+                    echo('<span class="active-test">Активен</span>');
+                }else{
+                    echo('<span class="not-active-test">Неактивен</span>');
+                }
+                echo('<h3 class="test-title">'.$test['name'].'</h3>');
+                echo('<div class="test-info"><span>'.$test['count'].' вопросов</span></div>');
+                echo('</div><div class="test-body"><p class="test-description">'.$test['description'].'</p>');
+                $sql = "SELECT * FROM test_results WHERE test_id = :id";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute(['id' => $test['id']]);
+                $test_results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                $count = count($test_results);
+                $summa_score = 0;
+                $summa_mark = 0;
+
+                foreach ($test_results as $res){
+                    $summa_score += $res['score'];
+                    $summa_mark += $res['mark'];
+                }
+                if ($count != 0){
+                    $sredn_score = round($summ_score / $count);
+                    $sredn_mark = round($summ_mark / $count);
+                }else{
+                    $sredn_score = 0;
+                    $sredn_mark = 0;
+                }
+
+                echo('<div class="test-stats"><div class="test-stat">
+                                    <div class="stat-number">'.$count.'</div>
                                     <div class="stat-name">Прошли</div>
                                 </div>
                                 <div class="test-stat">
-                                    <div class="stat-number">78%</div>
+                                    <div class="stat-number">'.$sredn_score.'%</div>
                                     <div class="stat-name">Средний балл</div>
                                 </div>
                                 <div class="test-stat">
-                                    <div class="stat-number">3</div>
-                                    <div class="stat-name">Класса</div>
+                                    <div class="stat-number">'.$sredn_mark.'</div>
+                                    <div class="stat-name">Средняя оценка</div>
                                 </div>
                             </div>
-                        </div>
+                ');
+                echo('</div>
                         <div class="test-footer">
-                            <button class="test-btn edit-btn">Редактировать</button>
+                            <a href="teacher_edit_test.php?test_id='.$test['id'].'" class="test-btn edit-btn">Редактировать</a>
                             <button class="test-btn results-btn">Результаты</button>
-                            <button class="test-btn delete-btn">Удалить</button>
+                            <a href="../php/delete_test.php?test_id='.$test['id'].'" class="test-btn delete-btn">Удалить</a>
                         </div>
-                    </div>
-                    
-                    <!-- Тест 2 -->
-                    <div class="test-card">
-                        <div class="test-header">
-                            <span class="test-subject">История</span>
-                            <h3 class="test-title">Россия в XIX веке</h3>
-                            <div class="test-info">
-                                <span>20 вопросов</span>
-                                <span>Создан: 10.11.2023</span>
-                            </div>
-                        </div>
-                        <div class="test-body">
-                            <p class="test-description">
-                                Основные события, реформы и личности российской истории XIX столетия.
-                            </p>
-                            <div class="test-stats">
-                                <div class="test-stat">
-                                    <div class="stat-number">38</div>
-                                    <div class="stat-name">Прошли</div>
-                                </div>
-                                <div class="test-stat">
-                                    <div class="stat-number">82%</div>
-                                    <div class="stat-name">Средний балл</div>
-                                </div>
-                                <div class="test-stat">
-                                    <div class="stat-number">2</div>
-                                    <div class="stat-name">Класса</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="test-footer">
-                            <button class="test-btn edit-btn">Редактировать</button>
-                            <button class="test-btn results-btn">Результаты</button>
-                            <button class="test-btn delete-btn">Удалить</button>
-                        </div>
-                    </div>
-                    
-                    <!-- Тест 3 -->
-                    <div class="test-card">
-                        <div class="test-header">
-                            <span class="test-subject">Биология</span>
-                            <h3 class="test-title">Строение клетки</h3>
-                            <div class="test-info">
-                                <span>12 вопросов</span>
-                                <span>Создан: 05.11.2023</span>
-                            </div>
-                        </div>
-                        <div class="test-body">
-                            <p class="test-description">
-                                Органоиды клетки, их функции и особенности строения растительных и животных клеток.
-                            </p>
-                            <div class="test-stats">
-                                <div class="test-stat">
-                                    <div class="stat-number">29</div>
-                                    <div class="stat-name">Прошли</div>
-                                </div>
-                                <div class="test-stat">
-                                    <div class="stat-number">75%</div>
-                                    <div class="stat-name">Средний балл</div>
-                                </div>
-                                <div class="test-stat">
-                                    <div class="stat-number">1</div>
-                                    <div class="stat-name">Класс</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="test-footer">
-                            <button class="test-btn edit-btn">Редактировать</button>
-                            <button class="test-btn results-btn">Результаты</button>
-                            <button class="test-btn delete-btn">Удалить</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                    </div>');
+             }?>
             
             <!-- Содержимое вкладки "Статистика" -->
             <div class="tab-content" id="statistics-tab">

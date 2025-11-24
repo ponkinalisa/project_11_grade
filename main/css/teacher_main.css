@@ -275,7 +275,18 @@ h1 {
     border-bottom: 1px solid var(--border);
 }
 
-.test-subject {
+.active-test {
+    display: inline-block;
+    background: rgba(59, 246, 134, 0.1);
+    color: var(--success);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 10px;
+}
+
+.not-active-test {
     display: inline-block;
     background: rgba(59, 130, 246, 0.1);
     color: var(--primary);
@@ -344,6 +355,7 @@ h1 {
     font-weight: 500;
     cursor: pointer;
     transition: all 0.3s ease;
+    text-decoration: none;
 }
 
 .edit-btn {

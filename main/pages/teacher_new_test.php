@@ -7,15 +7,15 @@ if (!isset($_SESSION['login'])){
     header('Location: ../../index.php');
     exit;
 }
-
 // Проверяем, был ли отправлен POST-запрос с данными для регистрации
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $test_name = $_POST['test_name'];
-    $test_description = $_POST['test_description'];
-    $test_time = $_POSt['test_time'];
+    $name = $_POST['test_name'];
+    $description = $_POST['test_description'];
+    $time = $_POST['test_time'];
     $grade5 = $_POST['grade5'];
     $grade4 = $_POST['grade4'];
     $grade3 = $_POST['grade3'];
+
 
     $types_arr = array();
     $tasks_arr = array();
@@ -25,9 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $i = 0;
 
     foreach ($_POST as $value => $key) {
-        echo($value);
-        echo('<br>');
-        if ("count_type_" . ($type - 1) == $value){
+        if ("count_type_" . ($type + 1) == $value){
             $type = $type + 1;
             $task = 1;
         }
@@ -38,20 +36,93 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $types_arr[$type] = array_merge(['weight' => $key], $types_arr[$type]);
         }
         if ("type_".$type."_task_".$task."_text" == $value){
-            $tasks_arr[$i] = array('type' => $type, 'text' => $key);
+            $tasks_arr[$i] = array('type' => $type - 1, 'text' => $key);
         }
         if ("type_".$type."_task_".$task."_answer" == $value){
             $tasks_arr[$i] = array_merge(['answer' => $key], $tasks_arr[$i]);
+            $file = $_FILES["type_".$type."_task_".$task."_image"] ?? null;
+            if ($file != null){
+                echo '!!!';
+                $type = $file['type'];
+                $file_name = $file['name'];
+                $tmp_name = $file["tmp_name"];
+                $file_name_sep = mb_split("\.", $file_name);
+                $error = 'Неподдерживаемый формат изображения.';
+                $new_file_name = random_int(1, 10000000000);
+                $ext = $file_name_sep[count($file_name_sep)-1];
+                switch ($type) {
+                    case 'image/gif':
+                        $error = Null;
+                        break;
+                    case 'image/jpg':
+                    case 'image/jpeg':
+                        $error = Null;
+                        break;
+                    case 'image/png':
+                        $error = Null;
+                        break;
+                    }
+                if (!$error){
+                    $dir_name = $_SESSION['login'];
+                    $directory = "../user_img/$dir_name";
+                    if (!file_exists($directory)) {
+                        mkdir($directory);  
+                    }
+                    move_uploaded_file($tmp_name, "./../user_img/$dir_name/$new_file_name.$ext");
+                    $path = "../user_img/$dir_name" . "/" . $new_file_name . '.' . $ext;
+                    echo $path;
+                    $tasks_arr[$i] = array_merge(['path' => $path], $tasks_arr[$i]);
+                }
+            }
             $task = $task + 1;
             $i += 1;
         }
-        print_r($tasks_arr);
-        echo('<br>');
-        print_r($types_arr);
-        echo('<br>');
     }
     print_r($tasks_arr);
     print_r($types_arr);
+
+    $count_tasks = 0;
+    foreach ($types_arr as $c){
+        $count_tasks += $c['count'];
+    }
+
+    echo $count_tasks;
+try {
+    $sql = "INSERT INTO tests (author_id, name, description, time, grade5, grade4, grade3, count_tasks, is_active) VALUES (:author_id, :name, :description, :time, :grade5, :grade4, :grade3, :count_tasks, 1)";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute(['author_id' => $_SESSION['id'], 'name' => $name, 'description' => $description, 'time' => $time, 'grade5' => $grade5, 'grade4' => $grade4, 'grade3' => $grade3, 'count_tasks' => $count_tasks]);
+    echo 'успех';
+}catch (PDOException $e) {  
+    echo 'ошибка!' . $e->getMessage(); 
+}  
+try{
+    $test_id = $pdo->lastInsertId();
+    echo $test_id;
+    $types_ids = array();
+
+    foreach ($types_arr as $type){
+        $sql = "INSERT INTO types (test_id, amount, score) VALUES (:test_id, :count, :score)";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute(['test_id' => $test_id, 'count' => $type['count'], 'score' => $type['weight']]);
+        echo '<br>';
+        $i = $pdo->lastInsertId();
+        array_push($types_ids, $i);
+    }
+    echo $types_ids;
+    foreach ($tasks_arr as $task){
+        if (isset($task['path'])){
+            $path = $task['path'];
+        }else{
+            $path = '';
+        }
+        $sql = "INSERT INTO tasks (test_id, type_id, text, answer, path_to_img) VALUES (:test_id, :type_id, :text, :answer, :path)";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute(['test_id' => $test_id, 'type_id' => $types_ids[$task['type']], 'text' => $task['text'], 'answer' => $task['answer'], 'path' => $path]);
+    }
+}catch (Exception $e) {  
+    echo 'ошибка!' . $e->getMessage();  
+}
+
 }
 ?>
 
@@ -183,7 +254,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <div class="task-type-controls">
                                     <div class="task-weight">
                                         <label for="taskWeight1">Количество заданий этого типа в тесте:</label>
-                                        <input type="number" id="taskWeight1" min="1" value="1" name="count_type_1">
+                                        <input type="number" id="taskWeight1" min="1" value="1" name="count_type_1" class="count">
                                     </div>
                                     <div class="icon-btn delete-btn" onclick="deleteTaskType(this, 1)">🗑️</div>
                                 </div>
@@ -233,6 +304,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <span>Добавить тип задания</span>
                     </div>
                 </div>
+
+                <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                    Итого заданий в тесте: <span id="countTasks">1</span>
+                </div>
                 
                 <!-- Кнопки действий -->
                 <div class="form-actions">
@@ -269,6 +344,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const grade3Value = document.getElementById('grade3').value;
             document.getElementById('grade2Value').textContent = grade3Value + '%';
         }
+
+        function updateCount(){
+            let a = 0;
+            let arr = document.getElementsByClassName('count');
+            for (let i = 0; i < arr.length; i++){
+                a = a + Number(arr[i].value);
+            }
+            document.getElementById('countTasks').innerText = String(a);
+        }
         
         // Предпросмотр изображения
         function previewImage(input) {
@@ -297,7 +381,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <div class="task-type-controls">
                                     <div class="task-weight">
                                         <label for="taskWeight1">Количество заданий этого типа в тесте:</label>
-                                        <input type="number" id="taskWeight1" min="1" value="1" name="count_type_${taskTypeCount}">
+                                        <input type="number" id="taskWeight1" min="1" value="1" name="count_type_${taskTypeCount}" class="count">
                                     </div>
                                     <div class="icon-btn delete-btn" onclick="deleteTaskType(this, ${taskTypeCount})">🗑️</div>
                                 </div>
@@ -342,6 +426,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             `;
             
             taskTypesContainer.appendChild(newTaskType);
+            updateCount();
         }
         
         // Удаление типа задания
@@ -357,6 +442,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 alert('Должен остаться хотя бы один тип задания');
             }
+            updateCount();
         }
         
         // Добавление нового задания
@@ -422,6 +508,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         
+
         // Инициализация
         document.addEventListener('DOMContentLoaded', function() {
             updateGrade2Value();
@@ -442,6 +529,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             });
         });
+        document.addEventListener('change',  updateCount);
     </script>
 </body>
 </html>
