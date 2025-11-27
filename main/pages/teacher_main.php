@@ -125,7 +125,7 @@ echo(count($tests));
                 echo('</div>
                         <div class="test-footer">
                             <a href="teacher_edit_test.php?test_id='.$test['id'].'" class="test-btn edit-btn">Редактировать</a>
-                            <button class="test-btn results-btn">Результаты</button>
+                            <a href="teacher_test_results.php?test_id='.$test['id'].'" class="test-btn results-btn">Результаты</a>
                             <a href="../php/delete_test.php?test_id='.$test['id'].'" class="test-btn delete-btn">Удалить</a>
                         </div>
                     </div>');

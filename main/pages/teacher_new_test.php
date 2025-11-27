@@ -72,6 +72,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $path = "../user_img/$dir_name" . "/" . $new_file_name . '.' . $ext;
                     echo $path;
                     $tasks_arr[$i] = array_merge(['path' => $path], $tasks_arr[$i]);
+                }else{
+                    die($error);
                 }
             }
             $task = $task + 1;

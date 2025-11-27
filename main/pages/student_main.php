@@ -1,3 +1,27 @@
+<?php 
+require_once '../php/config.php';
+
+session_start();
+
+//if (!isset($_SESSION['login'])){
+    //header('Location: ../../index.php');
+    //exit;
+//}
+
+# работа с бд для вывода тестов пользователя
+try{
+$sql = "SELECT * FROM tests WHERE is_active = 1";
+$stmt = $pdo->prepare($sql);
+$stmt->execute();
+$tests = $stmt->fetchAll(PDO::FETCH_ASSOC);
+echo(count($tests));
+}catch(PDOException $e){
+    echo $e->getMessage();
+}
+
+?>
+
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -18,8 +42,8 @@
                 
                 <div class="user-menu">
                     <div class="user-info">
-                        <div class="user-avatar">А</div>
-                        <div class="user-name">Александр Петров</div>
+                        <div class="user-avatar"><?php echo(mb_substr($_SESSION['i'], 0, 1) . mb_substr($_SESSION['f'], 0, 1)); ?></div>
+                        <div class="user-name"><?php echo($_SESSION['i'] . ' ' . $_SESSION['f']); ?></div>
                     </div>
                     <button class="profile-btn" id="profileBtn">
                         <span>Личный кабинет</span>
@@ -36,7 +60,7 @@
             <!-- Приветственная секция -->
             <section class="welcome-section">
                 <div class="welcome-card">
-                    <h1>Добро пожаловать, Александр!</h1>
+                    <h1>Добро пожаловать, <?php echo($_SESSION['i']); ?>!</h1>
                     <p class="welcome-text">Продолжайте обучение и улучшайте свои результаты</p>
                 </div>
             </section>
@@ -53,12 +77,8 @@
                         <div class="stat-label">Средний результат</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value">3</div>
+                        <div class="stat-value"><?php echo count($tests)?></div>
                         <div class="stat-label">Доступных теста</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">5</div>
-                        <div class="stat-label">Дней активности</div>
                     </div>
                 </div>
             </section>
@@ -72,6 +92,18 @@
                 
                 <div class="tests-grid">
                     <!-- Тест 1 -->
+                     <?php foreach ($tests as $test){
+                echo('<div class="test-card"><div class="test-header">');
+                echo('<span class="test-subject">Математика</span>');
+                echo('<h3 class="test-title">'.$test['name'].'</h3>');
+                echo('<div class="test-info"><span>'.$test['count'].' вопросов</span><span>'.$test['time'].' минут</span></div>');
+                echo('</div><div class="test-body"><p class="test-description">'.$test['description'].'</p>');
+                echo('</div>
+                        <div class="test-footer">
+                        <a href="test_run.php?test_id='.$test['id'].'" class="start-test-btn">Начать тест</a>
+                        </div></div>');
+             }?>
+            
                     <div class="test-card">
                         <div class="test-header">
                             <span class="test-subject">Математика</span>
