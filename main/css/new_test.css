@@ -344,7 +344,6 @@ textarea {
     max-height: 150px;
     margin-top: 10px;
     border-radius: 6px;
-    display: none;
 }
 
 .add-task-btn {
@@ -523,7 +522,23 @@ input[type=checkbox].toggle:checked::after{
         justify-content: center;
     }
 }
-
+.success-message {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    border: 1px solid #c3e6cb;
+}
+        
+.error-message {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    border: 1px solid #f5c6cb;
+}
 @media (max-width: 480px) {
     .user-info .user-name {
         display: none;

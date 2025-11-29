@@ -16,7 +16,7 @@ $statistics = [];
 if ($test_id) {
     try {
         // Получаем основную информацию о тесте
-        $sql = "SELECT t.*, u.first_name, u.last_name 
+        $sql = "SELECT t.name as test_name, t.*, u.name, u.surname 
                 FROM tests t 
                 JOIN users u ON t.author_id = u.id 
                 WHERE t.id = :test_id AND t.author_id = :author_id";
@@ -29,16 +29,17 @@ if ($test_id) {
         }
         
         // Получаем результаты прохождения теста
-        $sql = "SELECT r.*, u.first_name, u.last_name, u.group_name,
-                       (SELECT COUNT(*) FROM test_attempts WHERE test_id = :test_id) as total_attempts,
-                       (SELECT COUNT(DISTINCT user_id) FROM test_attempts WHERE test_id = :test_id) as unique_students
+        $sql = "SELECT r.*, u.name, u.surname, 
+                       (SELECT COUNT(*) FROM test_results WHERE test_id = :test_id) as total_attempts,
+                       (SELECT COUNT(DISTINCT student_id) FROM test_results WHERE test_id = :test_id) as unique_students
                 FROM test_results r 
-                JOIN users u ON r.user_id = u.id 
+                JOIN users u ON r.student_id = u.id 
                 WHERE r.test_id = :test_id 
-                ORDER BY r.score DESC, r.completion_time ASC";
+                ORDER BY r.score DESC";
         $stmt = $pdo->prepare($sql);
         $stmt->execute(['test_id' => $test_id]);
         $results_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
         
         // Получаем статистику по тесту
         if (!empty($results_data)) {
@@ -90,225 +91,7 @@ if ($test_id) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Результаты теста | Образовательная платформа</title>
     <link rel="stylesheet" type="text/css" href="../css/new_test.css">
-    <style>
-        .results-container {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .stat-card {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            border-left: 4px solid var(--primary-color);
-        }
-        
-        .stat-value {
-            font-size: 2rem;
-            font-weight: bold;
-            color: var(--primary-color);
-            margin-bottom: 5px;
-        }
-        
-        .stat-label {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-        
-        .grades-distribution {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-        
-        .grade-card {
-            text-align: center;
-            padding: 15px;
-            border-radius: 8px;
-            background: #f8f9fa;
-        }
-        
-        .grade-5 { border-top: 4px solid #28a745; }
-        .grade-4 { border-top: 4px solid #17a2b8; }
-        .grade-3 { border-top: 4px solid #ffc107; }
-        .grade-2 { border-top: 4px solid #dc3545; }
-        
-        .grade-count {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        
-        .results-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        
-        .results-table th,
-        .results-table td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid #e0e0e0;
-        }
-        
-        .results-table th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-        
-        .results-table tr:hover {
-            background-color: #f8f9fa;
-        }
-        
-        .score-cell {
-            font-weight: bold;
-        }
-        
-        .score-excellent { color: #28a745; }
-        .score-good { color: #17a2b8; }
-        .score-satisfactory { color: #ffc107; }
-        .score-poor { color: #dc3545; }
-        
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 30px;
-        }
-        
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-primary {
-            background: var(--primary-color);
-            color: white;
-        }
-        
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-        
-        .btn-outline {
-            background: transparent;
-            border: 1px solid var(--primary-color);
-            color: var(--primary-color);
-        }
-        
-        .btn:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-secondary);
-        }
-        
-        .empty-state-icon {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            opacity: 0.5;
-        }
-        
-        .filters {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .filter-select {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            background: white;
-        }
-        
-        .export-options {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #e0e0e0;
-        }
-        
-        .tabs {
-            display: flex;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #e0e0e0;
-        }
-        
-        .tab {
-            padding: 12px 24px;
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-            transition: all 0.3s ease;
-        }
-        
-        .tab.active {
-            border-bottom-color: var(--primary-color);
-            color: var(--primary-color);
-            font-weight: 600;
-        }
-        
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        .detailed-result {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            margin-top: 20px;
-        }
-        
-        .task-result {
-            padding: 15px;
-            border: 1px solid #e0e0e0;
-            border-radius: 6px;
-            margin-bottom: 10px;
-            background: white;
-        }
-        
-        .task-result.correct {
-            border-left: 4px solid #28a745;
-        }
-        
-        .task-result.incorrect {
-            border-left: 4px solid #dc3545;
-        }
-        
-        .chart-container {
-            height: 300px;
-            margin: 30px 0;
-        }
-    </style>
+    <link rel="stylesheet" type="text/css" href="../css/teacher_test_results.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -336,8 +119,8 @@ if ($test_id) {
         <div class="container">
             <!-- Заголовок страницы -->
             <div class="page-header">
-                <h1>Результаты теста: <?php echo htmlspecialchars($test_info['name'] ?? 'Неизвестный тест'); ?></h1>
-                <a href="teacher_tests.php" class="back-btn">← Назад к тестам</a>
+                <h1>Результаты теста: <?php echo htmlspecialchars($test_info['test_name'] ?? 'Неизвестный тест'); ?></h1>
+                <a href="teacher_main.php" class="back-btn">← Назад к тестам</a>
             </div>
             
             <?php if (empty($results_data)): ?>
@@ -355,10 +138,6 @@ if ($test_id) {
                         <div class="stat-card">
                             <div class="stat-value"><?php echo $statistics['unique_students']; ?></div>
                             <div class="stat-label">Студентов прошло</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value"><?php echo $statistics['total_attempts']; ?></div>
-                            <div class="stat-label">Всего попыток</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-value"><?php echo $statistics['average_score']; ?></div>
@@ -411,19 +190,6 @@ if ($test_id) {
                     <!-- Таблица результатов -->
                     <div id="results" class="tab-content active">
                         <div class="filters">
-                            <select class="filter-select" onchange="filterResults()" id="groupFilter">
-                                <option value="">Все группы</option>
-                                <?php
-                                $groups = array_unique(array_column($results_data, 'group_name'));
-                                foreach ($groups as $group): 
-                                    if (!empty($group)):
-                                ?>
-                                    <option value="<?php echo htmlspecialchars($group); ?>"><?php echo htmlspecialchars($group); ?></option>
-                                <?php 
-                                    endif;
-                                endforeach; 
-                                ?>
-                            </select>
                             
                             <select class="filter-select" onchange="filterResults()" id="gradeFilter">
                                 <option value="">Все оценки</option>
@@ -439,12 +205,9 @@ if ($test_id) {
                                 <tr>
                                     <th>#</th>
                                     <th>Студент</th>
-                                    <th>Группа</th>
                                     <th>Баллы</th>
                                     <th>Оценка</th>
-                                    <th>Время выполнения</th>
                                     <th>Дата прохождения</th>
-                                    <th>Действия</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -469,20 +232,13 @@ if ($test_id) {
                                 ?>
                                 <tr class="result-row" data-group="<?php echo htmlspecialchars($result['group_name'] ?? ''); ?>" data-grade="<?php echo $grade; ?>">
                                     <td><?php echo $index + 1; ?></td>
-                                    <td><?php echo htmlspecialchars($result['first_name'] . ' ' . $result['last_name']); ?></td>
-                                    <td><?php echo htmlspecialchars($result['group_name'] ?? '-'); ?></td>
+                                    <td><?php echo htmlspecialchars($result['name'] . ' ' . $result['surname']); ?></td>
                                     <td class="score-cell <?php echo $grade_class; ?>">
                                         <?php echo $result['score']; ?>/<?php echo $test_info['count_tasks']; ?>
                                         (<?php echo round($percentage); ?>%)
                                     </td>
                                     <td><span class="<?php echo $grade_class; ?>"><?php echo $grade; ?></span></td>
-                                    <td><?php echo gmdate("H:i:s", $result['completion_time']); ?></td>
-                                    <td><?php echo date('d.m.Y H:i', strtotime($result['completed_at'])); ?></td>
-                                    <td>
-                                        <button class="btn btn-outline" onclick="showDetailedResult(<?php echo $result['id']; ?>)">
-                                            Подробнее
-                                        </button>
-                                    </td>
+                                    <td><span><?php echo $result['date']; ?></span></td>
                                 </tr>
                                 <?php endforeach; ?>
                             </tbody>
@@ -501,8 +257,6 @@ if ($test_id) {
                 <div class="results-container">
                     <h3>Экспорт результатов</h3>
                     <div class="export-options">
-                        <button class="btn btn-primary" onclick="exportToCSV()">Экспорт в CSV</button>
-                        <button class="btn btn-secondary" onclick="exportToPDF()">Экспорт в PDF</button>
                         <button class="btn btn-outline" onclick="printResults()">Печать результатов</button>
                     </div>
                 </div>
@@ -510,7 +264,7 @@ if ($test_id) {
             
             <!-- Кнопки действий -->
             <div class="action-buttons">
-                <a href="teacher_tests.php" class="btn btn-secondary">Назад к тестам</a>
+                <a href="teacher_main.php" class="btn btn-secondary">Назад к тестам</a>
                 <?php if ($test_id): ?>
                     <a href="teacher_edit_test.php?test_id=<?php echo $test_id; ?>" class="btn btn-outline">Редактировать тест</a>
                 <?php endif; ?>

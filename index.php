@@ -15,7 +15,6 @@ if (isset($_SESSION['login'])){
 
 $error = false;
 
-// Проверяем, был ли отправлен POST-запрос с данными для регистрации
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     echo 1;
     $login = trim($_POST['username']);
@@ -40,8 +39,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'Content-Type: application/json',
             'Content-Length: ' . strlen($post_data)
         ],
-        CURLOPT_COOKIEJAR => $cookie_file, // Сохраняем cookies в файл
-        CURLOPT_COOKIEFILE => $cookie_file, // Читаем cookies из файла
+        CURLOPT_COOKIEJAR => $cookie_file, 
+        CURLOPT_COOKIEFILE => $cookie_file,
         CURLOPT_SSL_VERIFYPEER => false,
     ]);
 
@@ -54,15 +53,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     curl_close($ch);
     if ($error == false){
-        $get_url = 'https://api.gym42.ru/login/'; // пример GET эндпоинта
+        $get_url = 'https://api.gym42.ru/login/'; 
 
         $ch = curl_init();
         curl_setopt_array($ch, [
             CURLOPT_URL => $get_url,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPGET => true, // Явно указываем GET метод
-            CURLOPT_COOKIEFILE => $cookie_file, // Используем сохраненные cookies
-            CURLOPT_COOKIEJAR => $cookie_file, // Продолжаем сохранять cookies
+            CURLOPT_HTTPGET => true,
+            CURLOPT_COOKIEFILE => $cookie_file, 
+            CURLOPT_COOKIEJAR => $cookie_file, 
             CURLOPT_SSL_VERIFYPEER => false,
         ]);
 
@@ -140,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
     <div class="container">
-        <!-- Левая часть - приветственный текст -->
+
         <div class="welcome-section">
             <h1>Добро пожаловать в систему образовательного тестирования</h1>
             <p class="welcome-text">
@@ -172,7 +171,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
 
-        <!-- Правая часть - форма авторизации -->
         <div class="auth-section">
             <h2 class="auth-title">Вход в систему</h2>
             <form id="loginForm" method="post">
@@ -190,10 +188,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 <button type="submit" class="login-btn">Войти в систему</button>
                 
-                <div class="help-links">
-                    <a href="#" class="help-link">Забыли пароль?</a>
-                    <a href="#" class="help-link">Помощь</a>
-                </div>
             </form>
         </div>
     </div>

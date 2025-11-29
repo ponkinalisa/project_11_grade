@@ -13,10 +13,8 @@ $test_data = null;
 $types_data = [];
 $tasks_data = [];
 
-// Получаем данные теста для редактирования
 if ($test_id) {
     try {
-        // Получаем основную информацию о тесте
         $sql = "SELECT * FROM tests WHERE id = :test_id AND author_id = :author_id";
         $stmt = $pdo->prepare($sql);
         $stmt->execute(['test_id' => $test_id, 'author_id' => $_SESSION['id']]);
@@ -26,13 +24,11 @@ if ($test_id) {
             die("Тест не найден или у вас нет прав для его редактирования");
         }
         
-        // Получаем типы заданий
         $sql = "SELECT * FROM types WHERE test_id = :test_id";
         $stmt = $pdo->prepare($sql);
         $stmt->execute(['test_id' => $test_id]);
         $types_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
-        // Получаем задания
         $sql = "SELECT t.*, ty.id as type_db_id FROM tasks t 
                 JOIN types ty ON t.type_id = ty.id 
                 WHERE t.test_id = :test_id 
@@ -41,7 +37,6 @@ if ($test_id) {
         $stmt->execute(['test_id' => $test_id]);
         $tasks_raw = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
-        // Группируем задания по типам
         foreach ($tasks_raw as $task) {
             $type_index = array_search($task['type_db_id'], array_column($types_data, 'id'));
             if ($type_index !== false) {
@@ -57,7 +52,8 @@ if ($test_id) {
         echo 'Ошибка при получении данных теста: ' . $e->getMessage();
     }
 }
-// Обработка формы редактирования
+
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
     $name = $_POST['test_name'];
     $description = $_POST['test_description'];
@@ -65,11 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
     $grade5 = $_POST['grade5'];
     $grade4 = $_POST['grade4'];
     $grade3 = $_POST['grade3'];
-    if ($_POST['active']){
-        $active = 1;
-    }else{
-        $active = 0;
-    }
+    $active = isset($_POST['active']) ? 1 : 0;
 
     $types_arr = array();
     $tasks_arr = array();
@@ -78,22 +70,104 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
     $type = 1;
     $i = 0;
 
-    foreach ($_POST as $value => $key) {
-        if ("count_type_" . ($type + 1) == $value){
+    foreach ($_POST as $field_name => $field_value) {
+        if ("count_type_" . ($type + 1) == $field_name) {
             $type = $type + 1;
             $task = 1;
         }
-        if ("count_type_" . $type == $value){
-            $types_arr[$type] = ['count' => $key];
+        
+        if ("count_type_" . $type == $field_name) {
+            $types_arr[$type] = ['count' => $field_value];
         }
-        if ("type_" . $type . "_weight" == $value){
-            $types_arr[$type] = array_merge(['weight' => $key], $types_arr[$type]);
+        
+        if ("type_" . $type . "_weight" == $field_name) {
+            $types_arr[$type] = array_merge(['weight' => $field_value], $types_arr[$type]);
         }
-        if ("type_".$type."_task_".$task."_text" == $value){
-            $tasks_arr[$i] = array('type' => $type - 1, 'text' => $key);
+        
+        if ("type_".$type."_task_".$task."_text" == $field_name) {
+            $tasks_arr[$i] = array('type' => $type - 1, 'text' => $field_value);
         }
-        if ("type_".$type."_task_".$task."_answer" == $value){
-            $tasks_arr[$i] = array_merge(['answer' => $key], $tasks_arr[$i]);
+        
+        if (strpos($field_name, "type_".$type."_task_".$task."_answer") !== false) {
+            $tasks_arr[$i] = array_merge(['answer' => $field_value], $tasks_arr[$i]);
+
+            $file_field_name = "type_".$type."_task_".$task."_image";
+            $file = $_FILES[$file_field_name] ?? null;
+            
+            if ($file && $file['error'] === UPLOAD_ERR_OK) {
+                $file_type = $file['type'];
+                $file_name = $file['name'];
+                $tmp_name = $file["tmp_name"];
+                
+                $error = 'Неподдерживаемый формат изображения.';
+                $new_file_name = random_int(1, 10000000000);
+                
+                $file_name_sep = explode(".", $file_name);
+                $ext = strtolower(end($file_name_sep));
+                
+                $supported_types = ['image/gif', 'image/jpg', 'image/jpeg', 'image/png'];
+                if (in_array($file_type, $supported_types)) {
+                    $error = null;
+                }
+                
+                if (!$error) {
+                    $dir_name = $_SESSION['login'];
+                    $directory = "../user_img/$dir_name";
+                    
+                    if (!file_exists($directory)) {
+                        mkdir($directory, 0755, true);  
+                    }
+                    
+                    $path = "../user_img/$dir_name/" . $new_file_name . '.' . $ext;
+                    
+                    if (move_uploaded_file($tmp_name, $path)) {
+                        $tasks_arr[$i] = array_merge(['path_to_img' => $path], $tasks_arr[$i]);
+                        
+                        if (strpos($field_name, '_id_') !== false) {
+                            $parts = explode('_id_', $field_name);
+                            if (count($parts) > 1) {
+                                $img_id = intval($parts[1]);
+                                
+                                try {
+                                    $sql = "SELECT path_to_img FROM tasks WHERE id = :id";
+                                    $stmt = $pdo->prepare($sql);
+                                    $stmt->execute(['id' => $img_id]);
+                                    $path_to_img = $stmt->fetch(PDO::FETCH_ASSOC);
+                                    
+                                    if (!empty($path_to_img['path_to_img']) && file_exists($path_to_img['path_to_img'])) {
+                                        unlink($path_to_img['path_to_img']);
+                                    }
+                                } catch(Exception $e) {
+                                    error_log("Ошибка при удалении старого изображения: " . $e->getMessage());
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    die($error);
+                }
+            } else {
+                if (strpos($field_name, '_id_') !== false) {
+                    $parts = explode('_id_', $field_name);
+                    if (count($parts) > 1) {
+                        $img_id = intval($parts[1]);
+                        
+                        try {
+                            $sql = "SELECT path_to_img FROM tasks WHERE id = :id";
+                            $stmt = $pdo->prepare($sql);
+                            $stmt->execute(['id' => $img_id]);
+                            $path_to_img = $stmt->fetch(PDO::FETCH_ASSOC);
+                            
+                            if (!empty($path_to_img['path_to_img'])) {
+                                $tasks_arr[$i] = array_merge(['path_to_img' => $path_to_img['path_to_img']], $tasks_arr[$i]);
+                            }
+                        } catch(Exception $e) {
+                            error_log("Ошибка при получении пути к изображению: " . $e->getMessage());
+                        }
+                    }
+                }
+            }
+            
             $task = $task + 1;
             $i += 1;
         }
@@ -105,9 +179,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
     }
 
     try {
-        // Обновляем основную информацию о тесте
         $sql = "UPDATE tests SET name = :name, description = :description, time = :time, 
-                grade5 = :grade5, grade4 = :grade4, grade3 = :grade3, count_tasks = :count_tasks, active = :active 
+                grade5 = :grade5, grade4 = :grade4, grade3 = :grade3, count_tasks = :count_tasks, is_active = :active 
                 WHERE id = :test_id AND author_id = :author_id";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([
@@ -123,7 +196,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
             'active' => $active
         ]);
         
-        // Удаляем старые типы и задания
         $sql = "DELETE FROM tasks WHERE test_id = :test_id";
         $stmt = $pdo->prepare($sql);
         $stmt->execute(['test_id' => $test_id]);
@@ -132,41 +204,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
         $stmt = $pdo->prepare($sql);
         $stmt->execute(['test_id' => $test_id]);
         
-        // Добавляем новые типы
         $types_ids = array();
-        foreach ($types_arr as $type){
+        foreach ($types_arr as $type_data){
             $sql = "INSERT INTO types (test_id, amount, score) VALUES (:test_id, :count, :score)";
             $stmt = $pdo->prepare($sql);
-            $stmt->execute(['test_id' => $test_id, 'count' => $type['count'], 'score' => $type['weight']]);
-            $i = $pdo->lastInsertId();
-            array_push($types_ids, $i);
+            $stmt->execute(['test_id' => $test_id, 'count' => $type_data['count'], 'score' => $type_data['weight']]);
+            $type_id = $pdo->lastInsertId();
+            array_push($types_ids, $type_id);
         }
         
-        // Добавляем новые задания
-        foreach ($tasks_arr as $task){
+        foreach ($tasks_arr as $task_data){
+            $path_to_img = $task_data['path_to_img'] ?? '';
             $sql = "INSERT INTO tasks (test_id, type_id, text, answer, path_to_img) 
-                    VALUES (:test_id, :type_id, :text, :answer, '')";
+                    VALUES (:test_id, :type_id, :text, :answer, :path_to_img)";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([
                 'test_id' => $test_id, 
-                'type_id' => $types_ids[$task['type']], 
-                'text' => $task['text'], 
-                'answer' => $task['answer']
+                'type_id' => $types_ids[$task_data['type']], 
+                'text' => $task_data['text'], 
+                'answer' => $task_data['answer'],
+                'path_to_img' => $path_to_img
             ]);
         }
-        
-        echo '<div class="success-message">Тест успешно обновлен!</div>';
-        
-        // Обновляем данные для отображения
-        $test_data = [
-            'name' => $name,
-            'description' => $description,
-            'time' => $time,
-            'grade5' => $grade5,
-            'grade4' => $grade4,
-            'grade3' => $grade3
-        ];
-        
+        header('Location: teacher_main.php');
+        exit;
+
     } catch (PDOException $e) {
         echo '<div class="error-message">Ошибка при обновлении теста: ' . $e->getMessage() . '</div>';
     }
@@ -180,28 +242,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Редактирование теста | Образовательная платформа</title>
     <link rel="stylesheet" type="text/css" href="../css/new_test.css">
-    <style>
-        .success-message {
-            background-color: #d4edda;
-            color: #155724;
-            padding: 12px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .error-message {
-            background-color: #f8d7da;
-            color: #721c24;
-            padding: 12px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            border: 1px solid #f5c6cb;
-        }
-    </style>
 </head>
 <body>
-    <!-- Шапка -->
     <header class="header">
         <div class="container">
             <div class="header-content">
@@ -220,10 +262,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
         </div>
     </header>
 
-    <!-- Основной контент -->
     <main class="main-content">
         <div class="container">
-            <!-- Заголовок страницы -->
             <div class="page-header">
                 <h1>Редактирование теста</h1>
                 <a href="teacher_tests.php" class="back-btn">← Назад к тестам</a>
@@ -231,7 +271,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
             
             <div class="form-container">
                 <form enctype="multipart/form-data" action="teacher_edit_test.php?test_id=<?php echo $test_id; ?>" method="post">
-                <!-- Основная информация о тесте -->
                 <div class="form-section">
                     <h2 class="section-title">
                         <span class="section-title-icon">📝</span>
@@ -264,7 +303,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
                     </div>
                 </div>
                 
-                <!-- Критерии оценки -->
                 <div class="form-section">
                     <h2 class="section-title">
                         <span class="section-title-icon">📊</span>
@@ -309,7 +347,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
                     </div>
                 </div>
                 
-                <!-- Структура теста -->
                 <div class="form-section">
                     <h2 class="section-title">
                         <span class="section-title-icon">🔧</span>
@@ -365,17 +402,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
                                                         <div class="form-group">
                                                             <label>Правильный ответ</label>
                                                             <textarea placeholder="Введите правильный ответ" 
-                                                                      name="type_<?php echo $type_number; ?>_task_<?php echo $task_number; ?>_answer"><?php echo htmlspecialchars($task['answer']); ?></textarea>
+                                                                      name="type_<?php echo $type_number; ?>_task_<?php echo $task_number; ?>_answer_id_<?php echo $task['id']; ?>"><?php echo htmlspecialchars($task['answer']); ?></textarea>
                                                         </div>
-                                                        
                                                         <div class="image-upload">
                                                             <label>Изображение к заданию (опционально)</label>
                                                             <input type="file" accept="image/*" onchange="previewImage(this)" 
                                                                    name="type_<?php echo $type_number; ?>_task_<?php echo $task_number; ?>_image">
                                                             <?php if (!empty($task['path_to_img'])): ?>
-                                                                <img class="image-preview" src="../<?php echo $task['path_to_img']; ?>" alt="Предпросмотр">
+                                                                <img class="image-preview" src="<?php echo $task['path_to_img']; ?>" alt="Предпросмотр">
                                                             <?php else: ?>
-                                                                <img class="image-preview" src="" alt="Предпросмотр">
+                                                                <img class="image-preview" src="" alt="Предпросмотр" style="display: none">
                                                             <?php endif; ?>
                                                         </div>
                                                     </div>
@@ -388,7 +424,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
                                 </div>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <!-- Если типов нет, показываем один пустой тип -->
                             <div class="task-type-card">
                                 <div class="task-type-header">
                                     <div class="task-type-title">Тип задания 1</div>
@@ -461,8 +496,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
                         ?>
                     </span>
                 </div>
-                
-                <!-- Кнопки действий -->
                 <div class="form-actions">
                     <a href="teacher_tests.php" class="cancel-btn">Отмена</a>
                     <button class="save-btn" type="submit">Сохранить изменения</button>
@@ -472,7 +505,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
         </div>
     </main>
 
-    <!-- Подвал -->
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
@@ -649,7 +681,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
             tasksList.appendChild(newTask);
         }
         
-        // Удаление задания
         function deleteTask(button, n) {
             const taskItem = button.closest('.task-item');
             const tasksList = taskItem.parentElement;
@@ -670,16 +701,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
             }
         }
         
-        // Инициализация
         document.addEventListener('DOMContentLoaded', function() {
             updateGrade2Value();
-            
-            // Обновление значения оценки "2" при изменении оценки "3"
             document.getElementById('grade3').addEventListener('input', updateGrade2Value);
-            
-            // Обработчик сохранения теста
             document.querySelector('.save-btn').addEventListener('click', function() {
-                // Здесь будет логика сохранения теста
                 alert('Тест успешно обновлен!');
             });
         });

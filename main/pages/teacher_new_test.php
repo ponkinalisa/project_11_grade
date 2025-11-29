@@ -7,7 +7,7 @@ if (!isset($_SESSION['login'])){
     header('Location: ../../index.php');
     exit;
 }
-// Проверяем, был ли отправлен POST-запрос с данными для регистрации
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = $_POST['test_name'];
     $description = $_POST['test_description'];
@@ -124,7 +124,6 @@ try{
 }catch (Exception $e) {  
     echo 'ошибка!' . $e->getMessage();  
 }
-
 }
 ?>
 
@@ -140,13 +139,11 @@ try{
     <link rel="stylesheet" type="text/css" href="../css/new_test.css">
 </head>
 <body>
-    <!-- Шапка -->
     <header class="header">
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <div class="logo-icon">E</div>
-                    <div class="logo-text">EduTest</div>
+                    <div class="logo-icon">42</div>
                 </div>
                 
                 <div class="user-menu">
@@ -159,10 +156,8 @@ try{
         </div>
     </header>
 
-    <!-- Основной контент -->
     <main class="main-content">
         <div class="container">
-            <!-- Заголовок страницы -->
             <div class="page-header">
                 <h1>Создание нового теста</h1>
                 <a href="#" class="back-btn">← Назад к тестам</a>
@@ -170,7 +165,6 @@ try{
             
             <div class="form-container">
                 <form enctype="multipart/form-data" action="teacher_new_test.php" method="post">
-                <!-- Основная информация о тесте -->
                 <div class="form-section">
                     <h2 class="section-title">
                         <span class="section-title-icon">📝</span>
@@ -195,7 +189,6 @@ try{
                     </div>
                 </div>
                 
-                <!-- Критерии оценки -->
                 <div class="form-section">
                     <h2 class="section-title">
                         <span class="section-title-icon">📊</span>
@@ -236,8 +229,6 @@ try{
                         Оценка "2" выставляется автоматически при результате ниже <span id="grade2Value">45%</span>
                     </div>
                 </div>
-                
-                <!-- Структура теста -->
                 <div class="form-section">
                     <h2 class="section-title">
                         <span class="section-title-icon">🔧</span>
@@ -249,7 +240,6 @@ try{
                     </p>
                     
                     <div class="task-types" id="taskTypes">
-                        <!-- Тип задания 1 -->
                         <div class="task-type-card">
                             <div class="task-type-header">
                                 <div class="task-type-title">Тип задания 1</div>
@@ -268,7 +258,6 @@ try{
                             </div>
                             
                             <div class="tasks-list">
-                                <!-- Задания -->
                                 <div class="task-item">
                                     <div class="task-header">
                                         <div class="task-number">Задание 1</div>
@@ -310,8 +299,6 @@ try{
                 <div style="color: var(--text-secondary); font-size: 0.9rem;">
                     Итого заданий в тесте: <span id="countTasks">1</span>
                 </div>
-                
-                <!-- Кнопки действий -->
                 <div class="form-actions">
                     <button class="cancel-btn">Отмена</button>
                     <button class="save-btn" type="submit">Сохранить тест</button>
@@ -321,7 +308,6 @@ try{
         </div>
     </main>
 
-    <!-- Подвал -->
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
@@ -339,9 +325,8 @@ try{
 
     <script>
         let taskTypeCount = 1;
-        let taskCounts = {1: 1}; // Начальное количество заданий для первого типа
+        let taskCounts = {1: 1};
         
-        // Обновление значения для оценки "2"
         function updateGrade2Value() {
             const grade3Value = document.getElementById('grade3').value;
             document.getElementById('grade2Value').textContent = grade3Value + '%';
@@ -356,7 +341,6 @@ try{
             document.getElementById('countTasks').innerText = String(a);
         }
         
-        // Предпросмотр изображения
         function previewImage(input) {
             const preview = input.parentElement.querySelector('.image-preview');
             if (input.files && input.files[0]) {
@@ -369,7 +353,6 @@ try{
             }
         }
         
-        // Добавление нового типа задания
         function addTaskType() {
             taskTypeCount++;
             taskCounts[taskTypeCount] = 1;
@@ -431,7 +414,6 @@ try{
             updateCount();
         }
         
-        // Удаление типа задания
         function deleteTaskType(button, n) {
             if (document.querySelectorAll('.task-type-card').length > 1) {
                 for (let i = n; i < document.querySelectorAll('.task-type-card').length; i++) {
@@ -447,7 +429,6 @@ try{
             updateCount();
         }
         
-        // Добавление нового задания
         function addTask(button) {
             const taskTypeCard = button.closest('.task-type-card');
             const taskTypeHeader = taskTypeCard.querySelector('.task-type-title');
@@ -489,7 +470,6 @@ try{
             tasksList.appendChild(newTask);
         }
         
-        // Удаление задания
         function deleteTask(button, n) {
             const taskItem = button.closest('.task-item');
             const tasksList = taskItem.parentElement;
@@ -511,20 +491,12 @@ try{
         }
         
 
-        // Инициализация
         document.addEventListener('DOMContentLoaded', function() {
             updateGrade2Value();
-            
-            // Обновление значения оценки "2" при изменении оценки "3"
             document.getElementById('grade3').addEventListener('input', updateGrade2Value);
-            
-            // Обработчик сохранения теста
             document.querySelector('.save-btn').addEventListener('click', function() {
-                // Здесь будет логика сохранения теста
                 alert('Тест успешно сохранен!');
             });
-            
-            // Обработчик отмены
             document.querySelector('.cancel-btn').addEventListener('click', function() {
                 if (confirm('Вы уверены, что хотите отменить создание теста? Все несохраненные данные будут потеряны.')) {
                     window.history.back();

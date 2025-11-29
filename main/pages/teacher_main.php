@@ -9,11 +9,11 @@ if (!isset($_SESSION['login'])){
 }
 
 # работа с бд для вывода тестов пользователя
+
 $sql = "SELECT * FROM tests WHERE author_id = :id";
 $stmt = $pdo->prepare($sql);
 $stmt->execute(['id' => $_SESSION['id']]);
 $tests = $stmt->fetchAll(PDO::FETCH_ASSOC);
-echo(count($tests));
 
 ?>
 
@@ -29,19 +29,15 @@ echo(count($tests));
     <link rel="stylesheet" type="text/css" href="../css/teacher_main.css">
 </head>
 <body>
-    <!-- Шапка -->
     <header class="header">
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <div class="logo-icon">E</div>
-                    <div class="logo-text">EduTest</div>
+                    <div class="logo-icon">42</div>
                 </div>
                 
                 <nav class="nav-links">
                     <a href="#" class="nav-link active">Панель управления</a>
-                    <a href="#" class="nav-link">Мои классы</a>
-                    <a href="#" class="nav-link">Библиотека тестов</a>
                     <a href="#" class="nav-link">Отчеты</a>
                 </nav>
                 
@@ -55,10 +51,9 @@ echo(count($tests));
         </div>
     </header>
 
-    <!-- Основной контент -->
     <main class="main-content">
         <div class="container">
-            <!-- Заголовок страницы -->
+
             <div class="page-header">
                 <h1>Панель управления педагога</h1>
                 <a class="add-test-btn" id="addTestBtn" href="teacher_new_test.php" style="text-decoration: none">
@@ -67,14 +62,11 @@ echo(count($tests));
                 </a>
             </div>
             
-            <!-- Вкладки -->
             <div class="tabs">
                 <button class="tab active" data-tab="tests">Созданные тесты</button>
                 <button class="tab" data-tab="statistics">Статистика</button>
-                <button class="tab" data-tab="classes">Мои классы</button>
             </div>
             
-            <!-- Содержимое вкладки "Созданные тесты" -->
              <div class="tab-content active" id="tests-tab">
                 <div class="tests-grid">
              <?php foreach ($tests as $test){
@@ -85,7 +77,7 @@ echo(count($tests));
                     echo('<span class="not-active-test">Неактивен</span>');
                 }
                 echo('<h3 class="test-title">'.$test['name'].'</h3>');
-                echo('<div class="test-info"><span>'.$test['count'].' вопросов</span></div>');
+                echo('<div class="test-info"><span>Количество заданий: '.$test['count_tasks'].'</span></div>');
                 echo('</div><div class="test-body"><p class="test-description">'.$test['description'].'</p>');
                 $sql = "SELECT * FROM test_results WHERE test_id = :id";
                 $stmt = $pdo->prepare($sql);
@@ -97,12 +89,12 @@ echo(count($tests));
                 $summa_mark = 0;
 
                 foreach ($test_results as $res){
-                    $summa_score += $res['score'];
+                    $summa_score += round($res['score'] / $test['count_tasks'] * 100);
                     $summa_mark += $res['mark'];
                 }
-                if ($count != 0){
-                    $sredn_score = round($summ_score / $count);
-                    $sredn_mark = round($summ_mark / $count);
+                if ($count){
+                    $sredn_score = round($summa_score / $count);
+                    $sredn_mark = round($summa_mark / $count);
                 }else{
                     $sredn_score = 0;
                     $sredn_mark = 0;
@@ -131,7 +123,6 @@ echo(count($tests));
                     </div>');
              }?>
             
-            <!-- Содержимое вкладки "Статистика" -->
             <div class="tab-content" id="statistics-tab">
                 <div class="stats-cards">
                     <div class="stat-card">
@@ -173,7 +164,6 @@ echo(count($tests));
                 </div>
             </div>
             
-            <!-- Содержимое вкладки "Мои классы" -->
             <div class="tab-content" id="classes-tab">
                 <div class="empty-state">
                     <div class="empty-icon">🏫</div>
@@ -188,7 +178,6 @@ echo(count($tests));
         </div>
     </main>
 
-    <!-- Подвал -->
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
@@ -205,7 +194,6 @@ echo(count($tests));
     </footer>
 
     <script>
-        // Переключение вкладок
         const tabs = document.querySelectorAll('.tab');
         const tabContents = document.querySelectorAll('.tab-content');
         
@@ -213,18 +201,15 @@ echo(count($tests));
             tab.addEventListener('click', () => {
                 const tabId = tab.getAttribute('data-tab');
                 
-                // Убираем активный класс у всех вкладок и содержимого
                 tabs.forEach(t => t.classList.remove('active'));
                 tabContents.forEach(content => content.classList.remove('active'));
                 
-                // Добавляем активный класс к выбранной вкладке и содержимому
                 tab.classList.add('active');
                 document.getElementById(`${tabId}-tab`).classList.add('active');
             });
         });
         
 
-        // Обработчики кнопок тестов
         const editButtons = document.querySelectorAll('.edit-btn');
         editButtons.forEach(button => {
             button.addEventListener('click', function() {
@@ -251,7 +236,6 @@ echo(count($tests));
             });
         });
         
-        // Инициализация графиков
         const subjectCtx = document.getElementById('subjectChart').getContext('2d');
         const subjectChart = new Chart(subjectCtx, {
             type: 'bar',

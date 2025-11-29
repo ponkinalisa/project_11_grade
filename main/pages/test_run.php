@@ -11,11 +11,10 @@ if (!isset($_SESSION['login'])){
 $test_id = $_GET['test_id'] ?? null;
 $test_data = null;
 $tasks_data = [];
-$attempt_id = null;
+$existing_attempt = null;
 
 if ($test_id) {
     try {
-        // Получаем основную информацию о тесте
         $sql = "SELECT * FROM tests WHERE id = :test_id";
         $stmt = $pdo->prepare($sql);
         $stmt->execute(['test_id' => $test_id]);
@@ -24,13 +23,14 @@ if ($test_id) {
         if (!$test_data) {
             die("Тест не найден");
         }
-        
-        // Проверяем, не проходил ли студент уже этот тест
         $sql = "SELECT * FROM test_results WHERE student_id = :student_id AND test_id = :test_id";
         $stmt = $pdo->prepare($sql);
         $stmt->execute(['test_id' => $test_id, 'student_id' => $_SESSION['id']]);
         $existing_attempt = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
+        if ($existing_attempt) {
+            // Показываем сообщение, что тест уже пройден
+        }
         
         // Получаем задания теста
         $sql = "SELECT * FROM types WHERE test_id = :test_id";
@@ -47,33 +47,86 @@ if ($test_id) {
             $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             if (count($tasks) >= $type['amount']){
-                if (count($tasks) == 1){
-                    $tasks_data = array_merge($tasks_data, [$tasks]);
-                }else{
-                    if ($type['amount'] == 1){
-                        $tasks_data = array_merge($tasks_data, [$tasks[array_rand($tasks)]]);
-                    }else{
-                        $rands = array_rand($tasks, $type['amount']);
+                if ($type['amount'] == 1){
+                    $tasks_data[] = $tasks[array_rand($tasks)];
+                } else {
+                    $rands = array_rand($tasks, $type['amount']);
+                    if ($type['amount'] == 1) {
+                        $tasks_data[] = $tasks[$rands];
+                    } else {
                         foreach ($rands as $r){
-                            $tasks_data.array_push($tasks[$r]);
+                            $tasks_data[] = $tasks[$r];
                         }
                     }
                 }
-            }else{
+            } else {
                 if (count($tasks) > 0){
                     $rands = array_rand($tasks, count($tasks));
+                    if (count($tasks) == 1) {
+                        $tasks_data[] = $tasks[$rands];
+                    } else {
                         foreach ($rands as $r){
-                            $tasks_data.array_push($tasks[$r]);
+                            $tasks_data[] = $tasks[$r];
                         }
+                    }
                 }
             }
-
         }
-        
-
+        shuffle($tasks_data);
 
     } catch (PDOException $e) {
         echo 'Ошибка при загрузке теста: ' . $e->getMessage();
+    }
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
+    try {
+        $user_answers = $_POST['answers'] ?? [];
+        $score = 0;
+        $total_tasks = count($tasks_data);
+        foreach ($user_answers as $task_id => $user_answer) {
+            $user_answer = trim($user_answer);
+            $sql = "SELECT * FROM tasks WHERE id = :test_id";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute(['test_id' => $task_id]);
+            $task = $stmt->fetch(PDO::FETCH_ASSOC);
+            $correct_answer = $task['answer'];
+            
+            if (!empty($user_answer) && strtolower($user_answer) === strtolower($correct_answer)) {
+                $score++;
+            }
+        }
+        
+        $percentage = $total_tasks > 0 ? ($score / $total_tasks) * 100 : 0;
+        
+        $mark = 2;
+        if ($percentage >= $test_data['grade5']) {
+            $mark = 5;
+        } elseif ($percentage >= $test_data['grade4']) {
+            $mark = 4;
+        } elseif ($percentage >= $test_data['grade3']) {
+            $mark = 3;
+        }
+        
+        $sql = "INSERT INTO test_results (student_id, test_id, score, mark, date) 
+                VALUES (:student_id, :test_id, :score, :mark, NOW())";
+        
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([
+            'student_id' => $_SESSION['id'],
+            'test_id' => $test_id,
+            'score' => $score,
+            'mark' => $mark
+        ]);
+        
+        $result_id = $pdo->lastInsertId();
+        
+        header("Location: student_test_result.php?attempt_id=" . $result_id);
+        exit;
+        
+    } catch (PDOException $e) {
+        echo 'Ошибка при сохранении результатов: ' . $e->getMessage();
+        error_log("Ошибка сохранения теста: " . $e->getMessage());
     }
 }
 ?>
@@ -88,7 +141,6 @@ if ($test_id) {
     <link rel="stylesheet" type="text/css" href="../css/test_run.css">
 </head>
 <body>
-    <!-- Шапка -->
     <header class="header">
         <div class="container">
             <div class="header-content">
@@ -107,7 +159,6 @@ if ($test_id) {
         </div>
     </header>
 
-    <!-- Основной контент -->
     <main class="main-content">
         <div class="container">
             <?php if (!$test_data): ?>
@@ -119,10 +170,33 @@ if ($test_id) {
                         <a href="student_tests.php" class="btn btn-primary">Вернуться к тестам</a>
                     </div>
                 </div>
+            <?php elseif ($existing_attempt): ?>
+                <div class="test-container">
+                    <div class="already-completed">
+                        <div class="already-completed-icon">📝</div>
+                        <h3>Тест уже пройден</h3>
+                        <p>Вы уже проходили этот тест <?php echo date('d.m.Y в H:i', strtotime($existing_attempt['date'])); ?>.</p>
+                        <p>Ваш результат: <strong><?php echo $existing_attempt['score']; ?>/<?php echo $test_data['count_tasks']; ?></strong> (оценка: <?php echo $existing_attempt['mark']; ?>)</p>
+                        <div style="margin-top: 20px;">
+                            <a href="student_tests.php" class="btn btn-primary">Вернуться к тестам</a>
+                        </div>
+                    </div>
+                </div>
             <?php else: ?>
-                <form id="testForm" action="student_take_test.php?test_id=<?php echo $test_id; ?>" method="post">
+                <div class="test-instructions">
+                    <h3>Инструкция по прохождению теста</h3>
+                    <ul>
+                        <li>На выполнение теста отводится <strong><?php echo $test_data['time']; ?> минут</strong></li>
+                        <li>Тест содержит <strong><?php echo count($tasks_data); ?> заданий</strong></li>
+                        <li>Для получения оценки "5" необходимо набрать не менее <strong><?php echo $test_data['grade5']; ?>%</strong> правильных ответов</li>
+                        <li>Для оценки "4" - не менее <strong><?php echo $test_data['grade4']; ?>%</strong></li>
+                        <li>Для оценки "3" - не менее <strong><?php echo $test_data['grade3']; ?>%</strong></li>
+                        <li>Менее <strong><?php echo $test_data['grade3']; ?>%</strong> - оценка "2"</li>
+                    </ul>
+                </div>
+
+                <form id="testForm" action="test_run.php?test_id=<?php echo $test_id; ?>" method="post">
                     <div class="test-container">
-                        <!-- Заголовок теста -->
                         <div class="test-header">
                             <div class="test-info">
                                 <h1><?php echo htmlspecialchars($test_data['name']); ?></h1>
@@ -138,12 +212,10 @@ if ($test_id) {
                             </div>
                         </div>
                         
-                        <!-- Предупреждение о времени -->
                         <div class="time-warning" id="timeWarning">
                             ⚠️ Внимание! До окончания теста осталось менее 5 минут!
                         </div>
                         
-                        <!-- Прогресс-бар -->
                         <div class="progress-container">
                             <div class="progress-bar">
                                 <div class="progress-fill" id="progressFill" style="width: 0%"></div>
@@ -154,7 +226,6 @@ if ($test_id) {
                             </div>
                         </div>
                         
-                        <!-- Навигация по заданиям -->
                         <div class="task-navigation">
                             <div class="nav-buttons">
                                 <button type="button" class="btn btn-outline" id="prevBtn" onclick="prevTask()" disabled>
@@ -174,7 +245,6 @@ if ($test_id) {
                             </div>
                         </div>
                         
-                        <!-- Задания -->
                         <div id="tasksContainer">
                             <?php foreach ($tasks_data as $index => $task): ?>
                                 <div class="task-item" id="task-<?php echo $index; ?>" 
@@ -187,7 +257,7 @@ if ($test_id) {
                                         <div class="task-text"><?php echo nl2br(htmlspecialchars($task['text'])); ?></div>
                                         
                                         <?php if (!empty($task['path_to_img'])): ?>
-                                            <img src="../<?php echo $task['path_to_img']; ?>" 
+                                            <img src="<?php echo $task['path_to_img']; ?>" 
                                                  alt="Изображение к заданию" 
                                                  class="task-image">
                                         <?php endif; ?>
@@ -210,20 +280,14 @@ if ($test_id) {
                             <?php endforeach; ?>
                         </div>
                         
-                        <!-- Управление тестом -->
                         <div class="test-controls">
                             <button type="button" class="btn btn-secondary" onclick="showExitConfirmation()">
                                 Выйти из теста
                             </button>
                             
-                            <div style="display: flex; gap: 15px;">
-                                <button type="button" class="btn btn-outline" onclick="saveProgress()">
-                                    Сохранить прогресс
-                                </button>
-                                <button type="button" class="btn btn-primary" onclick="showSubmitConfirmation()">
-                                    Завершить тест
-                                </button>
-                            </div>
+                            <button type="button" class="btn" onclick="showSubmitConfirmation()">
+                                Завершить тест
+                            </button>
                         </div>
                     </div>
                 </form>
@@ -231,7 +295,6 @@ if ($test_id) {
         </div>
     </main>
 
-    <!-- Модальные окна -->
     <div class="confirmation-modal" id="exitModal">
         <div class="modal-content">
             <h3>Выход из теста</h3>
@@ -252,12 +315,11 @@ if ($test_id) {
             </div>
             <div class="modal-buttons">
                 <button class="btn btn-secondary" onclick="hideSubmitConfirmation()">Вернуться к тесту</button>
-                <button class="btn btn-primary" onclick="submitTest()">Завершить тест</button>
+                <button class="btn" onclick="submitTest()">Завершить тест</button>
             </div>
         </div>
     </div>
     
-    <!-- Индикатор автосохранения -->
     <div class="auto-save-indicator" id="autoSaveIndicator">
         Прогресс сохранен ✓
     </div>
@@ -266,55 +328,52 @@ if ($test_id) {
         let currentTaskIndex = 0;
         const totalTasks = <?php echo count($tasks_data); ?>;
         let answeredTasks = new Set();
-        let timeLeft = <?php echo $test_data['time'] * 60; ?>; // в секундах
+        let timeLeft = <?php echo $test_data['time'] * 60; ?>; 
         let timerInterval;
+        let testStarted = false;
         
-        // Инициализация таймера
         function startTimer() {
-            timerInterval = setInterval(function() {
-                timeLeft--;
-                
-                // Обновляем отображение таймера
-                const hours = Math.floor(timeLeft / 3600);
-                const minutes = Math.floor((timeLeft % 3600) / 60);
-                const seconds = timeLeft % 60;
-                
-                document.getElementById('timer').textContent = 
-                    `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                
-                // Предупреждение за 5 минут
-                if (timeLeft === 300) { // 5 минут = 300 секунд
-                    document.getElementById('timeWarning').style.display = 'block';
-                }
-                
-                // Красный цвет за 1 минуту
-                if (timeLeft <= 60) {
-                    document.getElementById('timer').classList.add('timer-warning');
-                }
-                
-                // Автоматическая отправка при окончании времени
-                if (timeLeft <= 0) {
-                    clearInterval(timerInterval);
-                    alert('Время вышло! Тест будет автоматически отправлен.');
-                    submitTest();
-                }
-            }, 1000);
+            if (!testStarted) {
+                testStarted = true;
+                timerInterval = setInterval(function() {
+                    timeLeft--;
+                    const hours = Math.floor(timeLeft / 3600);
+                    const minutes = Math.floor((timeLeft % 3600) / 60);
+                    const seconds = timeLeft % 60;
+                    
+                    document.getElementById('timer').textContent = 
+                        `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    if (timeLeft === 300) { 
+                        document.getElementById('timeWarning').style.display = 'block';
+                    }
+                    
+                    if (timeLeft <= 60) {
+                        document.getElementById('timer').classList.add('timer-warning');
+                    }
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        alert('Время вышло! Тест будет автоматически отправлен.');
+                        submitTest();
+                    }
+                }, 1000);
+            }
         }
         
-        // Навигация по заданиям
         function goToTask(index) {
-            // Скрываем текущее задание
             document.getElementById(`task-${currentTaskIndex}`).style.display = 'none';
             document.querySelectorAll('.task-number')[currentTaskIndex].classList.remove('current');
             
-            // Показываем новое задание
             currentTaskIndex = index;
             document.getElementById(`task-${currentTaskIndex}`).style.display = 'block';
             document.querySelectorAll('.task-number')[currentTaskIndex].classList.add('current');
-            
-            // Обновляем кнопки навигации
+            document.querySelectorAll('.task-number')[currentTaskIndex].classList.add('visited');
             updateNavigationButtons();
             updateProgress();
+            
+            if (!testStarted) {
+                startTimer();
+            }
         }
         
         function nextTask() {
@@ -335,7 +394,6 @@ if ($test_id) {
             document.getElementById('currentTask').textContent = currentTaskIndex + 1;
         }
         
-        // Отметка задания как отвеченного
         function markTaskAnswered(taskIndex) {
             answeredTasks.add(taskIndex);
             document.querySelectorAll('.task-number')[taskIndex].classList.add('answered');
@@ -343,7 +401,6 @@ if ($test_id) {
             autoSaveProgress();
         }
         
-        // Обновление прогресса
         function updateProgress() {
             const progress = (answeredTasks.size / totalTasks) * 100;
             document.getElementById('progressFill').style.width = `${progress}%`;
@@ -351,15 +408,24 @@ if ($test_id) {
             document.getElementById('answeredCount').textContent = answeredTasks.size;
         }
         
-        // Автосохранение
         function autoSaveProgress() {
-            // В реальном приложении здесь был бы AJAX-запрос к серверу
+            const formData = new FormData(document.getElementById('testForm'));
+            const answers = {};
+            
+            for (let [key, value] of formData.entries()) {
+                if (key.startsWith('answers')) {
+                    answers[key] = value;
+                }
+            }
+            
+            localStorage.setItem(`test_<?php echo $test_id; ?>_answers`, JSON.stringify(answers));
+            localStorage.setItem(`test_<?php echo $test_id; ?>_time`, timeLeft.toString());
+            
             showAutoSaveIndicator();
         }
         
         function saveProgress() {
-            // В реальном приложении здесь был бы AJAX-запрос к серверу
-            showAutoSaveIndicator();
+            autoSaveProgress();
             alert('Прогресс успешно сохранен!');
         }
         
@@ -371,7 +437,42 @@ if ($test_id) {
             }, 2000);
         }
         
-        // Подтверждение отправки
+        function loadSavedProgress() {
+            const savedAnswers = localStorage.getItem(`test_<?php echo $test_id; ?>_answers`);
+            const savedTime = localStorage.getItem(`test_<?php echo $test_id; ?>_time`);
+            
+            if (savedAnswers) {
+                const answers = JSON.parse(savedAnswers);
+                
+                for (const [key, value] of Object.entries(answers)) {
+                    const textarea = document.querySelector(`textarea[name="${key}"]`);
+                    
+                    if (textarea && value) {
+                        textarea.value = value;
+                        const taskIndex = Array.from(document.querySelectorAll('.task-item')).findIndex(
+                            task => task.querySelector(`textarea[name="${key}"]`)
+                        );
+                        if (taskIndex !== -1) {
+                            answeredTasks.add(taskIndex);
+                            document.querySelectorAll('.task-number')[taskIndex].classList.add('answered');
+                        }
+                    }
+                }
+                
+                updateProgress();
+            }
+            
+            if (savedTime) {
+                timeLeft = parseInt(savedTime);
+                const hours = Math.floor(timeLeft / 3600);
+                const minutes = Math.floor((timeLeft % 3600) / 60);
+                const seconds = timeLeft % 60;
+                
+                document.getElementById('timer').textContent = 
+                    `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }
+        
         function showSubmitConfirmation() {
             document.getElementById('submitModal').style.display = 'flex';
         }
@@ -382,10 +483,11 @@ if ($test_id) {
         
         function submitTest() {
             clearInterval(timerInterval);
+            localStorage.removeItem(`test_<?php echo $test_id; ?>_answers`);
+            localStorage.removeItem(`test_<?php echo $test_id; ?>_time`);
             document.getElementById('testForm').submit();
         }
         
-        // Подтверждение выхода
         function showExitConfirmation() {
             document.getElementById('exitModal').style.display = 'flex';
         }
@@ -393,32 +495,32 @@ if ($test_id) {
         function hideExitConfirmation() {
             document.getElementById('exitModal').style.display = 'none';
         }
-        
-        // Предотвращение случайного закрытия страницы
         function setupBeforeUnload() {
             window.addEventListener('beforeunload', function(e) {
-                if (answeredTasks.size > 0) {
+                if (answeredTasks.size > 0 && timeLeft > 0) {
                     e.preventDefault();
                     e.returnValue = '';
-                    return 'Вы уверены, что хотите покинуть страницу? Несохраненный прогресс будет потерян.';
+                    return 'Вы уверены, что хотите покинуть страницу? Ваш прогресс будет сохранен, и вы сможете продолжить позже.';
                 }
             });
         }
-        
-        // Инициализация
         document.addEventListener('DOMContentLoaded', function() {
-            startTimer();
             updateProgress();
             setupBeforeUnload();
+            loadSavedProgress();
+            document.addEventListener('click', function() {
+                if (!testStarted) {
+                    startTimer();
+                }
+            }, { once: true });
             
-            // Проверяем сохраненные ответы (в реальном приложении - загрузка с сервера)
-            <?php if ($existing_attempt && $existing_attempt['status'] === 'in_progress'): ?>
-                // Здесь можно загрузить сохраненные ответы
-                console.log('Загружаем сохраненный прогресс...');
-            <?php endif; ?>
+            document.addEventListener('keydown', function() {
+                if (!testStarted) {
+                    startTimer();
+                }
+            }, { once: true });
         });
         
-        // Горячие клавиши
         document.addEventListener('keydown', function(e) {
             if (e.ctrlKey || e.metaKey) {
                 switch(e.key) {
@@ -433,6 +535,22 @@ if ($test_id) {
                     case 's':
                         e.preventDefault();
                         saveProgress();
+                        break;
+                }
+            }
+            if (!e.ctrlKey && !e.metaKey) {
+                switch(e.key) {
+                    case 'ArrowLeft':
+                        if (e.target.tagName !== 'TEXTAREA') {
+                            e.preventDefault();
+                            prevTask();
+                        }
+                        break;
+                    case 'ArrowRight':
+                        if (e.target.tagName !== 'TEXTAREA') {
+                            e.preventDefault();
+                            nextTask();
+                        }
                         break;
                 }
             }
