@@ -23,9 +23,10 @@ if ($test_id) {
         if (!$test_data) {
             die("Тест не найден");
         }
+
         $sql = "SELECT * FROM test_results WHERE student_id = :student_id AND test_id = :test_id";
         $stmt = $pdo->prepare($sql);
-        $stmt->execute(['test_id' => $test_id, 'student_id' => $_SESSION['id']]);
+        $stmt->execute(['student_id' => $_SESSION['id'], 'test_id' => $test_id]);
         $existing_attempt = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($existing_attempt) {
@@ -107,21 +108,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
         } elseif ($percentage >= $test_data['grade3']) {
             $mark = 3;
         }
-        
-        $sql = "INSERT INTO test_results (student_id, test_id, score, mark, date) 
-                VALUES (:student_id, :test_id, :score, :mark, NOW())";
+
+        $sql = "SELECT * FROM test_results WHERE student_id = :student_id AND test_id = :test_id";
         
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([
-            'student_id' => $_SESSION['id'],
-            'test_id' => $test_id,
-            'score' => $score,
-            'mark' => $mark
-        ]);
+        $stmt->execute(['student_id' => $_SESSION['id'], 'test_id' => $test_id]);
+
+        $test_exist = $stmt->fetchAll();
+
+        if (count($test_exist) == 0){
+            $sql = "INSERT INTO test_results (student_id, test_id, score, mark, date) 
+                VALUES (:student_id, :test_id, :score, :mark, NOW())";
+        
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([
+                'student_id' => $_SESSION['id'],
+                'test_id' => $test_id,
+                'score' => $score,
+                'mark' => $mark
+            ]);
         
         $result_id = $pdo->lastInsertId();
+        }
         
-        header("Location: student_test_result.php?attempt_id=" . $result_id);
+        header("Location: student_test_result.php?attempt_id=" . $test_id);
         exit;
         
     } catch (PDOException $e) {
@@ -175,7 +185,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
                     <div class="already-completed">
                         <div class="already-completed-icon">📝</div>
                         <h3>Тест уже пройден</h3>
-                        <p>Вы уже проходили этот тест <?php echo date('d.m.Y в H:i', strtotime($existing_attempt['date'])); ?>.</p>
+                        <p>Вы уже проходили этот тест <?php echo date('d.m.Y', strtotime($existing_attempt['date'])); ?>.</p>
                         <p>Ваш результат: <strong><?php echo $existing_attempt['score']; ?>/<?php echo $test_data['count_tasks']; ?></strong> (оценка: <?php echo $existing_attempt['mark']; ?>)</p>
                         <div style="margin-top: 20px;">
                             <a href="student_tests.php" class="btn btn-primary">Вернуться к тестам</a>

@@ -3,7 +3,7 @@ require_once '../php/config.php';
 
 session_start();
 
-if (!isset($_SESSION['login'])){
+if (!isset($_SESSION['login']) and $_SESSION['status'] != 'student'){
     header('Location: ../../index.php');
     exit;
 }
@@ -25,6 +25,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $i = 0;
 
     foreach ($_POST as $value => $key) {
+        print_r( $value);
+        print_r( $key);
+        print_r($type); 
+        print_r($task);
+
         if ("count_type_" . ($type + 1) == $value){
             $type = $type + 1;
             $task = 1;
@@ -41,19 +46,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ("type_".$type."_task_".$task."_answer" == $value){
             $tasks_arr[$i] = array_merge(['answer' => $key], $tasks_arr[$i]);
             $file = $_FILES["type_".$type."_task_".$task."_image"] ?? null;
-            if ($file != null){
-                echo '!!!';
-                $type = $file['type'];
+            print_r($file);
+            if ($file and $file['error'] == 0){
+                print_r(0);
+                $type_f = $file['type'];
                 $file_name = $file['name'];
                 $tmp_name = $file["tmp_name"];
                 $file_name_sep = mb_split("\.", $file_name);
                 $error = 'Неподдерживаемый формат изображения.';
                 $new_file_name = random_int(1, 10000000000);
                 $ext = $file_name_sep[count($file_name_sep)-1];
-                switch ($type) {
-                    case 'image/gif':
-                        $error = Null;
-                        break;
+                switch ($type_f) {
                     case 'image/jpg':
                     case 'image/jpeg':
                         $error = Null;
@@ -70,8 +73,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     move_uploaded_file($tmp_name, "./../user_img/$dir_name/$new_file_name.$ext");
                     $path = "../user_img/$dir_name" . "/" . $new_file_name . '.' . $ext;
-                    echo $path;
                     $tasks_arr[$i] = array_merge(['path' => $path], $tasks_arr[$i]);
+                    print_r($path);
                 }else{
                     die($error);
                 }
@@ -80,37 +83,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $i += 1;
         }
     }
-    print_r($tasks_arr);
-    print_r($types_arr);
 
     $count_tasks = 0;
     foreach ($types_arr as $c){
         $count_tasks += $c['count'];
     }
-
-    echo $count_tasks;
 try {
     $sql = "INSERT INTO tests (author_id, name, description, time, grade5, grade4, grade3, count_tasks, is_active) VALUES (:author_id, :name, :description, :time, :grade5, :grade4, :grade3, :count_tasks, 1)";
     $stmt = $pdo->prepare($sql);
     $stmt->execute(['author_id' => $_SESSION['id'], 'name' => $name, 'description' => $description, 'time' => $time, 'grade5' => $grade5, 'grade4' => $grade4, 'grade3' => $grade3, 'count_tasks' => $count_tasks]);
-    echo 'успех';
 }catch (PDOException $e) {  
     echo 'ошибка!' . $e->getMessage(); 
 }  
 try{
     $test_id = $pdo->lastInsertId();
-    echo $test_id;
     $types_ids = array();
 
     foreach ($types_arr as $type){
         $sql = "INSERT INTO types (test_id, amount, score) VALUES (:test_id, :count, :score)";
         $stmt = $pdo->prepare($sql);
         $stmt->execute(['test_id' => $test_id, 'count' => $type['count'], 'score' => $type['weight']]);
-        echo '<br>';
         $i = $pdo->lastInsertId();
         array_push($types_ids, $i);
     }
-    echo $types_ids;
     foreach ($tasks_arr as $task){
         if (isset($task['path'])){
             $path = $task['path'];
@@ -121,6 +116,8 @@ try{
         $stmt = $pdo->prepare($sql);
         $stmt->execute(['test_id' => $test_id, 'type_id' => $types_ids[$task['type']], 'text' => $task['text'], 'answer' => $task['answer'], 'path' => $path]);
     }
+    header('Location: teacher_main.php');
+    exit;
 }catch (Exception $e) {  
     echo 'ошибка!' . $e->getMessage();  
 }
@@ -269,18 +266,18 @@ try{
                                     <div class="task-content">
                                         <div class="form-group">
                                             <label>Текст задания</label>
-                                            <textarea placeholder="Введите текст задания" name="type_1_task_1_text"></textarea>
+                                            <textarea placeholder="Введите текст задания" name="type_1_task_1_text" required></textarea>
                                         </div>
                                         
                                         <div class="form-group">
                                             <label>Правильный ответ</label>
-                                            <textarea placeholder="Введите правильный ответ" name="type_1_task_1_answer"></textarea>
+                                            <input  type="number" step="any" placeholder="Введите правильный ответ" name="type_1_task_1_answer" required></input>
                                         </div>
                                         
                                         <div class="image-upload">
                                             <label>Изображение к заданию (опционально)</label>
-                                            <input type="file" accept="image/*" onchange="previewImage(this)" name="type_1_task_1_image">
-                                            <img class="image-preview" src="" alt="Предпросмотр">
+                                            <input type="file" accept="image/png, image/jpg, image/jpeg" onchange="previewImage(this)" name="type_1_task_1_image">
+                                            <img class="image-preview" src="" alt="Предпросмотр" style="display:none;">
                                         </div>
                                     </div>
                                 </div>
@@ -311,13 +308,12 @@ try{
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
-                <div class="copyright">
-                    © 2023 Образовательная платформа EduTest. Все права защищены.
+                 <div class="copyright">
+                    © 2025 МБОУ Гимназия №42 Алтайского края. Все права защищены.
                 </div>
                 <div class="footer-links">
-                    <a href="#" class="footer-link">Помощь</a>
-                    <a href="#" class="footer-link">О системе</a>
-                    <a href="#" class="footer-link">Контакты</a>
+                    <a href="https://gymn42.gosuslugi.ru/" class="footer-link">Сайт Гимназии</a>
+                    <a href="tel:+73852226810" class="footer-link">Контакты</a>
                 </div>
             </div>
         </div>
@@ -390,18 +386,18 @@ try{
                                     <div class="task-content">
                                         <div class="form-group">
                                             <label>Текст задания</label>
-                                            <textarea placeholder="Введите текст задания" name="type_${taskTypeCount}_task_1_text"></textarea>
+                                            <textarea placeholder="Введите текст задания" name="type_${taskTypeCount}_task_1_text" required></textarea>
                                         </div>
                                         
                                         <div class="form-group">
                                             <label>Правильный ответ</label>
-                                            <textarea placeholder="Введите правильный ответ" name="type_${taskTypeCount}_task_1_answer"></textarea>
+                                            <input  type="number" step="any" placeholder="Введите правильный ответ" name="type_${taskTypeCount}_task_1_answer" required></input>
                                         </div>
                                         
                                         <div class="image-upload">
                                             <label>Изображение к заданию (опционально)</label>
-                                            <input type="file" accept="image/*" onchange="previewImage(this)" name="type_${taskTypeCount}_task_1_image">
-                                            <img class="image-preview" src="" alt="Предпросмотр">
+                                            <input type="file" accept="image/png, image/jpg, image/jpeg" onchange="previewImage(this)" name="type_${taskTypeCount}_task_1_image">
+                                            <img class="image-preview" src="" alt="Предпросмотр" style="display:none;">
                                         </div>
                                     </div>
                                 </div>
@@ -451,18 +447,18 @@ try{
                                     <div class="task-content">
                                         <div class="form-group">
                                             <label>Текст задания</label>
-                                            <textarea placeholder="Введите текст задания" name="type_${taskTypeNumber}_task_${taskNumber}_text"></textarea>
+                                            <textarea placeholder="Введите текст задания" name="type_${taskTypeNumber}_task_${taskNumber}_text" required></textarea>
                                         </div>
                                         
                                         <div class="form-group">
                                             <label>Правильный ответ</label>
-                                            <textarea placeholder="Введите правильный ответ" name="type_${taskTypeNumber}_task_${taskNumber}_answer"></textarea>
+                                            <input  type="number" step="any" placeholder="Введите правильный ответ" name="type_${taskTypeNumber}_task_${taskNumber}_answer" required></input>
                                         </div>
                                         
                                         <div class="image-upload">
                                             <label>Изображение к заданию (опционально)</label>
-                                            <input type="file" accept="image/*" onchange="previewImage(this)" name="type_${taskTypeNumber}_task_${taskNumber}_image">
-                                            <img class="image-preview" src="" alt="Предпросмотр">
+                                            <input type="file" accept="image/png, image/jpg, image/jpeg" onchange="previewImage(this)" name="type_${taskTypeNumber}_task_${taskNumber}_image">
+                                            <img class="image-preview" src="" alt="Предпросмотр" style="display:none;">
                                         </div>
                                     </div>
             `;

@@ -3,7 +3,7 @@ require_once '../php/config.php';
 
 session_start();
 
-if (!isset($_SESSION['login'])){
+if (!isset($_SESSION['login']) and $_SESSION['status'] != 'student'){
     header('Location: ../../index.php');
     exit;
 }
@@ -266,7 +266,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
         <div class="container">
             <div class="page-header">
                 <h1>Редактирование теста</h1>
-                <a href="teacher_tests.php" class="back-btn">← Назад к тестам</a>
+                <a href="teacher_main.php" class="back-btn">← Назад к тестам</a>
             </div>
             
             <div class="form-container">
@@ -401,12 +401,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
                                                         
                                                         <div class="form-group">
                                                             <label>Правильный ответ</label>
-                                                            <textarea placeholder="Введите правильный ответ" 
-                                                                      name="type_<?php echo $type_number; ?>_task_<?php echo $task_number; ?>_answer_id_<?php echo $task['id']; ?>"><?php echo htmlspecialchars($task['answer']); ?></textarea>
+                                                            <input  type="number" step="any" placeholder="Введите правильный ответ" 
+                                                                      name="type_<?php echo $type_number; ?>_task_<?php echo $task_number; ?>_answer_id_<?php echo $task['id']; ?>" value="<?php echo htmlspecialchars($task['answer']); ?>"></input>
                                                         </div>
                                                         <div class="image-upload">
                                                             <label>Изображение к заданию (опционально)</label>
-                                                            <input type="file" accept="image/*" onchange="previewImage(this)" 
+                                                            <input type="file" accept="image/png, image/jpg, image/jpeg" onchange="previewImage(this)" 
                                                                    name="type_<?php echo $type_number; ?>_task_<?php echo $task_number; ?>_image">
                                                             <?php if (!empty($task['path_to_img'])): ?>
                                                                 <img class="image-preview" src="<?php echo $task['path_to_img']; ?>" alt="Предпросмотр">
@@ -458,12 +458,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
                                             
                                             <div class="form-group">
                                                 <label>Правильный ответ</label>
-                                                <textarea placeholder="Введите правильный ответ" name="type_1_task_1_answer"></textarea>
+                                                <input  type="number" step="any" placeholder="Введите правильный ответ" name="type_1_task_1_answer"></input>
                                             </div>
                                             
                                             <div class="image-upload">
                                                 <label>Изображение к заданию (опционально)</label>
-                                                <input type="file" accept="image/*" onchange="previewImage(this)" name="type_1_task_1_image">
+                                                <input type="file" accept="image/png, image/jpg, image/jpeg" onchange="previewImage(this)" name="type_1_task_1_image">
                                                 <img class="image-preview" src="" alt="Предпросмотр">
                                             </div>
                                         </div>
@@ -509,12 +509,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
         <div class="container">
             <div class="footer-content">
                 <div class="copyright">
-                    © 2023 Образовательная платформа EduTest. Все права защищены.
+                    © 2025 МБОУ Гимназия №42 Алтайского края. Все права защищены.
                 </div>
                 <div class="footer-links">
-                    <a href="#" class="footer-link">Помощь</a>
-                    <a href="#" class="footer-link">О системе</a>
-                    <a href="#" class="footer-link">Контакты</a>
+                    <a href="https://gymn42.gosuslugi.ru/" class="footer-link">Сайт Гимназии</a>
+                    <a href="tel:+73852226810" class="footer-link">Контакты</a>
                 </div>
             </div>
         </div>
@@ -604,12 +603,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
                             
                             <div class="form-group">
                                 <label>Правильный ответ</label>
-                                <textarea placeholder="Введите правильный ответ" name="type_${taskTypeCount}_task_1_answer"></textarea>
+                                <input  type="number" step="any" placeholder="Введите правильный ответ" name="type_${taskTypeCount}_task_1_answer"></input>
                             </div>
                             
                             <div class="image-upload">
                                 <label>Изображение к заданию (опционально)</label>
-                                <input type="file" accept="image/*" onchange="previewImage(this)" name="type_${taskTypeCount}_task_1_image">
+                                <input type="file" accept="image/png, image/jpg, image/jpeg" onchange="previewImage(this)" name="type_${taskTypeCount}_task_1_image">
                                 <img class="image-preview" src="" alt="Предпросмотр">
                             </div>
                         </div>
@@ -667,12 +666,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
                     
                     <div class="form-group">
                         <label>Правильный ответ</label>
-                        <textarea placeholder="Введите правильный ответ" name="type_${taskTypeNumber}_task_${taskNumber}_answer"></textarea>
+                        <input  type="number" step="any" placeholder="Введите правильный ответ" name="type_${taskTypeNumber}_task_${taskNumber}_answer"></input>
                     </div>
                     
                     <div class="image-upload">
                         <label>Изображение к заданию (опционально)</label>
-                        <input type="file" accept="image/*" onchange="previewImage(this)" name="type_${taskTypeNumber}_task_${taskNumber}_image">
+                        <input type="file" accept="image/png, image/jpg, image/jpeg" onchange="previewImage(this)" name="type_${taskTypeNumber}_task_${taskNumber}_image">
                         <img class="image-preview" src="" alt="Предпросмотр">
                     </div>
                 </div>

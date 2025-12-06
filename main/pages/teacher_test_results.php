@@ -3,7 +3,7 @@ require_once '../php/config.php';
 
 session_start();
 
-if (!isset($_SESSION['login'])){
+if (!isset($_SESSION['login']) and $_SESSION['status'] != 'student'){
     header('Location: ../../index.php');
     exit;
 }
@@ -276,13 +276,12 @@ if ($test_id) {
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
-                <div class="copyright">
-                    © 2023 Образовательная платформа EduTest. Все права защищены.
+                 <div class="copyright">
+                    © 2025 МБОУ Гимназия №42 Алтайского края. Все права защищены.
                 </div>
                 <div class="footer-links">
-                    <a href="#" class="footer-link">Помощь</a>
-                    <a href="#" class="footer-link">О системе</a>
-                    <a href="#" class="footer-link">Контакты</a>
+                    <a href="https://gymn42.gosuslugi.ru/" class="footer-link">Сайт Гимназии</a>
+                    <a href="tel:+73852226810" class="footer-link">Контакты</a>
                 </div>
             </div>
         </div>

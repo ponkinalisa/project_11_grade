@@ -3,7 +3,7 @@ require_once '../php/config.php';
 
 session_start();
 
-if (!isset($_SESSION['login'])){
+if (!isset($_SESSION['login']) and $_SESSION['status'] != 'teacher'){
     header('Location: ../../index.php');
     exit;
 }
@@ -154,51 +154,8 @@ if ($attempt_id) {
                         </div>
                     </div>
                     
-                    <div class="criteria-info">
-                        <h3>Критерии оценки</h3>
-                        <div class="criteria-grid">
-                            <div class="criteria-item <?php echo $percentage >= $result_data['grade5'] ? 'active' : ''; ?>">
-                                <div style="font-weight: 600;">5 (Отлично)</div>
-                                <div>≥ <?php echo $result_data['grade5']; ?>%</div>
-                            </div>
-                            <div class="criteria-item <?php echo $percentage >= $result_data['grade4'] && $percentage < $result_data['grade5'] ? 'active' : ''; ?>">
-                                <div style="font-weight: 600;">4 (Хорошо)</div>
-                                <div>≥ <?php echo $result_data['grade4']; ?>%</div>
-                            </div>
-                            <div class="criteria-item <?php echo $percentage >= $result_data['grade3'] && $percentage < $result_data['grade4'] ? 'active' : ''; ?>">
-                                <div style="font-weight: 600;">3 (Удовл.)</div>
-                                <div>≥ <?php echo $result_data['grade3']; ?>%</div>
-                            </div>
-                            <div class="criteria-item <?php echo $percentage < $result_data['grade3'] ? 'active' : ''; ?>">
-                                <div style="font-weight: 600;">2 (Неудовл.)</div>
-                                <div>< <?php echo $result_data['grade3']; ?>%</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="performance-summary">
-                        <div class="summary-card">
-                            <div class="summary-value <?php echo $grade_class; ?>"><?php echo $grade; ?></div>
-                            <div class="summary-label">Итоговая оценка</div>
-                        </div>
-                        <div class="summary-card">
-                            <div class="summary-value"><?php echo $result_data['score']; ?>/<?php echo $test['count_tasks']; ?></div>
-                            <div class="summary-label">Правильные ответы</div>
-                        </div>
-                        <div class="summary-card">
-                            <div class="summary-value"><?php echo round($percentage, 1); ?>%</div>
-                            <div class="summary-label">Общий результат</div>
-                        </div>
-                    </div>
-
                     <div class="action-buttons">
-                        <a href="student_tests.php" class="btn btn-primary">Вернуться к списку тестов</a>
-                        <button class="btn btn-outline" onclick="window.print()">Распечатать результат</button>
-                        <?php if ($result_data['score'] < $test['count_tasks']): ?>
-                            <a href="student_take_test.php?test_id=<?php echo $result_data['test_id']; ?>" class="btn btn-outline">
-                                Попробовать снова
-                            </a>
-                        <?php endif; ?>
+                        <a href="student_main.php" class="btn btn-outline">Вернуться к списку тестов</a>
                     </div>
                 </div>
                 

@@ -3,7 +3,7 @@ require_once '../php/config.php';
 
 session_start();
 
-if (!isset($_SESSION['login'])){
+if (!isset($_SESSION['login']) and $_SESSION['status'] != 'teacher'){
     header('Location: ../../index.php');
     exit;
 }
@@ -13,7 +13,30 @@ try{
 $sql = "SELECT * FROM tests WHERE is_active = 1";
 $stmt = $pdo->prepare($sql);
 $stmt->execute();
-$tests = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$tests_all = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$tests = array();
+
+foreach ($tests_all as $test){
+    $sql = "SELECT * FROM test_results WHERE student_id = :id AND test_id = :test_id";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute(['id' => $_SESSION['id'], 'test_id' => $test['id']]);
+    $in_results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    if (count($in_results) == 0){
+        array_push($tests, $test);
+    }
+}
+$sql = "SELECT * FROM test_results WHERE student_id = :id";
+$stmt = $pdo->prepare($sql);
+$stmt->execute(['id' => $_SESSION['id']]);
+$tests_in_result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$sred_z = 0;
+foreach ($tests_in_result as $res){
+    $sred_z += $res['mark'];
+}
+if (count($tests_in_result) > 0){
+    $sred_z = round($sred_z / count($tests_in_result), 2);
+}
 }catch(PDOException $e){
     echo $e->getMessage();
 }
@@ -42,10 +65,10 @@ $tests = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <div class="user-avatar"><?php echo(mb_substr($_SESSION['i'], 0, 1) . mb_substr($_SESSION['f'], 0, 1)); ?></div>
                         <div class="user-name"><?php echo($_SESSION['i'] . ' ' . $_SESSION['f']); ?></div>
                     </div>
-                    <button class="profile-btn" id="profileBtn">
+                    <a class="profile-btn" href="student_account.php">
                         <span>Личный кабинет</span>
                         <span>→</span>
-                    </button>
+                    </a>
                 </div>
             </div>
         </div>
@@ -63,12 +86,12 @@ $tests = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <section class="stats-section">
                 <div class="stats-cards">
                     <div class="stat-card">
-                        <div class="stat-value">12</div>
+                        <div class="stat-value"><?php echo(count($tests_in_result))?></div>
                         <div class="stat-label">Пройдено тестов</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value">87%</div>
-                        <div class="stat-label">Средний результат</div>
+                        <div class="stat-value"><?php echo($sred_z) ?> </div>
+                        <div class="stat-label">Средняя оценка</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-value"><?php echo count($tests)?></div>
@@ -85,16 +108,16 @@ $tests = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 
                 <div class="tests-grid">
                 <?php foreach ($tests as $test){
-                echo('<div class="test-card"><div class="test-header">');
-                echo('<span class="test-subject">Математика</span>');
-                echo('<h3 class="test-title">'.$test['name'].'</h3>');
-                echo('<div class="test-info"><span>'.$test['count'].' вопросов</span><span>'.$test['time'].' минут</span></div>');
-                echo('</div><div class="test-body"><p class="test-description">'.$test['description'].'</p>');
-                echo('</div>
+                        echo('<div class="test-card"><div class="test-header">');
+                        echo('<span class="test-subject">Математика</span>');
+                        echo('<h3 class="test-title">'.$test['name'].'</h3>');
+                        echo('<div class="test-info"><span>'.$test['count'].' вопросов</span><span>'.$test['time'].' минут</span></div>');
+                        echo('</div><div class="test-body"><p class="test-description">'.$test['description'].'</p>');
+                        echo('</div>
                         <div class="test-footer">
                         <a href="test_run.php?test_id='.$test['id'].'" class="start-test-btn">Начать тест</a>
-                        </div></div>');
-                }?>
+                        </div></div>');   
+                    }?>
                 </div>
             </section>
             
@@ -105,49 +128,41 @@ $tests = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </h2>
                 
                 <div class="tests-grid">
-                    <div class="test-card">
-                        <div class="test-header">
-                            <span class="test-subject">Физика</span>
-                            <h3 class="test-title">Законы Ньютона</h3>
-                            <div class="test-info">
-                                <span>92%</span>
-                                <span>Завершено 2 дня назад</span>
-                            </div>
-                        </div>
-                        <div class="test-body">
-                            <p class="test-description">
-                                Проверка понимания трех законов Ньютона и их применения к решению задач.
-                            </p>
-                        </div>
+                    <?php 
+                    $arr = array();
+                    foreach ($tests_in_result as $test_res){
+                        try{
+                            if (!in_array($test_res['test_id'], $arr)){
+                                $sql = "SELECT * FROM tests WHERE id = :id";
+                            $stmt = $pdo->prepare($sql);
+                            $stmt->execute(['id' => $test_res['test_id']]);
+                            $test = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                            $percent = round($test_res['score'] / $test['count_tasks'] * 100);
+
+                        echo('<div class="test-card"><div class="test-header">');
+                        echo('<span class="test-subject">Математика</span>');
+                        echo('<h3 class="test-title">'.$test['name'].'</h3>');
+                        echo('<div class="test-info"><span>'.$percent.'%</span><br><span>Оценка: '.$test_res['mark'].'</span><br><span>Завершено: '.$test_res['date'].'</span></div>');
+                        echo('</div><div class="test-body"><p class="test-description">'.$test['description'].'</p>');
+                        echo('</div>
                         <div class="test-footer">
                             <div class="completed-badge">
                                 <span>✓</span>
                                 <span>Завершено</span>
                             </div>
-                        </div>
-                    </div>
-                    
-                    <div class="test-card">
-                        <div class="test-header">
-                            <span class="test-subject">Литература</span>
-                            <h3 class="test-title">Творчество Пушкина</h3>
-                            <div class="test-info">
-                                <span>78%</span>
-                                <span>Завершено 5 дней назад</span>
-                            </div>
-                        </div>
-                        <div class="test-body">
-                            <p class="test-description">
-                                Основные произведения, герои и темы в творчестве Александра Сергеевича Пушкина.
-                            </p>
-                        </div>
-                        <div class="test-footer">
-                            <div class="completed-badge">
-                                <span>✓</span>
-                                <span>Завершено</span>
-                            </div>
-                        </div>
-                    </div>
+                        </div></div>');
+
+                                array_push($arr, $test_res['test_id']);
+                            }
+
+
+                        }catch (Exception $e){
+                            echo($e->getMessage());
+                        }
+                    }
+                    ?>
+                
                 </div>
             </section>
         </div>
@@ -157,22 +172,17 @@ $tests = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <div class="container">
             <div class="footer-content">
                 <div class="copyright">
-                    © 2023 Образовательная платформа EduTest. Все права защищены.
+                    © 2025 МБОУ Гимназия №42 Алтайского края. Все права защищены.
                 </div>
                 <div class="footer-links">
-                    <a href="#" class="footer-link">Помощь</a>
-                    <a href="#" class="footer-link">О системе</a>
-                    <a href="#" class="footer-link">Контакты</a>
+                    <a href="https://gymn42.gosuslugi.ru/" class="footer-link">Сайт Гимназии</a>
+                    <a href="tel:+73852226810" class="footer-link">Контакты</a>
                 </div>
             </div>
         </div>
     </footer>
 
     <script>
-        document.getElementById('profileBtn').addEventListener('click', function() {
-            alert('Переход в личный кабинет');
-        });
-        
         const startButtons = document.querySelectorAll('.start-test-btn');
         startButtons.forEach(button => {
             button.addEventListener('click', function() {

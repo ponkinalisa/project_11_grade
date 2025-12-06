@@ -87,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         };
 
         if ($login == 'eaponkina'){
-            $status = 'teacher';
+            $status = 'admin';
         }
 
         $sql = "SELECT * FROM users WHERE login = :login";

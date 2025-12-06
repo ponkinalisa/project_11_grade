@@ -3,7 +3,7 @@ require_once '../php/config.php';
 
 session_start();
 
-if (!isset($_SESSION['login'])){
+if (!isset($_SESSION['login']) and $_SESSION['status'] != 'student'){
     header('Location: ../../index.php');
     exit;
 }
@@ -37,14 +37,18 @@ $tests = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
                 
                 <nav class="nav-links">
-                    <a href="#" class="nav-link active">Панель управления</a>
-                    <a href="#" class="nav-link">Отчеты</a>
+                    <a href="teacher_main.php" class="nav-link active">Панель управления</a>
+                    <a href="teacher_statistics.php" class="nav-link">Статистика</a>
+                
                 </nav>
                 
                 <div class="user-menu">
                     <div class="user-info">
                         <div class="user-avatar"><?php echo(mb_substr($_SESSION['i'], 0, 1) . mb_substr($_SESSION['f'], 0, 1)); ?></div>
                         <div class="user-name"><?php echo($_SESSION['i'] . ' ' . $_SESSION['f']); ?></div>
+                    <a class="test-btn delete-btn" href="../php/where.php">
+                        <span>Выйти</span>
+                    </a>
                     </div>
                 </div>
             </div>
@@ -64,7 +68,6 @@ $tests = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             <div class="tabs">
                 <button class="tab active" data-tab="tests">Созданные тесты</button>
-                <button class="tab" data-tab="statistics">Статистика</button>
             </div>
             
              <div class="tab-content active" id="tests-tab">
@@ -181,13 +184,12 @@ $tests = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
-                <div class="copyright">
-                    © 2023 Образовательная платформа EduTest. Все права защищены.
+                 <div class="copyright">
+                    © 2025 МБОУ Гимназия №42 Алтайского края. Все права защищены.
                 </div>
                 <div class="footer-links">
-                    <a href="#" class="footer-link">Помощь</a>
-                    <a href="#" class="footer-link">О системе</a>
-                    <a href="#" class="footer-link">Контакты</a>
+                    <a href="https://gymn42.gosuslugi.ru/" class="footer-link">Сайт Гимназии</a>
+                    <a href="tel:+73852226810" class="footer-link">Контакты</a>
                 </div>
             </div>
         </div>
@@ -226,15 +228,6 @@ $tests = $stmt->fetchAll(PDO::FETCH_ASSOC);
             });
         });
         
-        const deleteButtons = document.querySelectorAll('.delete-btn');
-        deleteButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const testTitle = this.closest('.test-card').querySelector('.test-title').textContent;
-                if(confirm(`Вы уверены, что хотите удалить тест "${testTitle}"?`)) {
-                    alert(`Тест "${testTitle}" удален`);
-                }
-            });
-        });
         
         const subjectCtx = document.getElementById('subjectChart').getContext('2d');
         const subjectChart = new Chart(subjectCtx, {
