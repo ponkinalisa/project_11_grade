@@ -135,7 +135,7 @@ $stmt->execute(['test_id' => $test_id, 'author_id' => $_SESSION['id']]);
                     Да, удалить тест
                 </button>
             </form>
-            <a href="teacher_main.php" class="btn btn-secondary">
+            <a href="../pages/teacher_main.php" class="btn btn-secondary">
                 Нет, отменить
             </a>
         </div>

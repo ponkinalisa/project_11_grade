@@ -211,22 +211,6 @@ $tests = $stmt->fetchAll(PDO::FETCH_ASSOC);
             });
         });
         
-
-        const editButtons = document.querySelectorAll('.edit-btn');
-        editButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const testTitle = this.closest('.test-card').querySelector('.test-title').textContent;
-                alert(`Редактирование теста: "${testTitle}"`);
-            });
-        });
-        
-        const resultsButtons = document.querySelectorAll('.results-btn');
-        resultsButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const testTitle = this.closest('.test-card').querySelector('.test-title').textContent;
-                alert(`Просмотр результатов теста: "${testTitle}"`);
-            });
-        });
         
         
         const subjectCtx = document.getElementById('subjectChart').getContext('2d');

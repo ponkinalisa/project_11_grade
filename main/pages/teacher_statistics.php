@@ -10,26 +10,22 @@ if (!isset($_SESSION['login']) and $_SESSION['status'] != 'student'){
 
 $teacher_id = $_SESSION['id'];
 
-// Параметры фильтрации
 $test_id = $_GET['test_id'] ?? null;
 $start_date = $_GET['start_date'] ?? null;
 $end_date = $_GET['end_date'] ?? null;
 $sort_by = $_GET['sort'] ?? 'date_desc';
 
-// Получаем все тесты учителя
 $sql = "SELECT id, name, is_active FROM tests WHERE author_id = :id ORDER BY name";
 $stmt = $pdo->prepare($sql);
 $stmt->execute(['id' => $teacher_id]);
 $tests = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Получаем статистику
 $overall_stats = [];
 $detailed_stats = [];
 $graph_data = [];
 
 if (!empty($tests)) {
     try {
-        // Базовый SQL для получения всех результатов
         $sql = "SELECT tr.*, t.name as test_name, t.count_tasks, t.grade5, t.grade4, t.grade3,
                        u.surname, u.name, u.patronymic,
                        ROUND((tr.score * 100.0 / t.count_tasks), 1) as percentage,
@@ -46,7 +42,6 @@ if (!empty($tests)) {
         
         $params = ['teacher_id' => $teacher_id];
         
-        // Применяем фильтры
         if ($test_id) {
             $sql .= " AND t.id = :test_id";
             $params['test_id'] = $test_id;
@@ -62,7 +57,6 @@ if (!empty($tests)) {
             $params['end_date'] = $end_date;
         }
         
-        // Сортировка
         switch ($sort_by) {
             case 'date_desc':
                 $sql .= " ORDER BY tr.date DESC";
@@ -95,33 +89,24 @@ if (!empty($tests)) {
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
         $all_results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        // Рассчитываем общую статистику
         $total_tests = count($all_results);
         $total_students = 0;
         $total_percentage = 0;
         $grades_distribution = ['5' => 0, '4' => 0, '3' => 0, '2' => 0];
-        
-        // Статистика по каждому тесту
         $test_stats = [];
-        // Статистика по датам для графика
         $date_stats = [];
-        // Уникальные студенты
         $unique_students = [];
         
         foreach ($all_results as $result) {
             $percentage = floatval($result['percentage']);
             $total_percentage += $percentage;
             
-            // Распределение по оценкам
             $grades_distribution[$result['grade']]++;
             
-            // Уникальные студенты
             if (!in_array($result['student_id'], $unique_students)) {
                 $unique_students[] = $result['student_id'];
             }
             
-            // Статистика по тестам
             $test_id_key = $result['test_id'];
             if (!isset($test_stats[$test_id_key])) {
                 $test_stats[$test_id_key] = [
@@ -136,12 +121,10 @@ if (!empty($tests)) {
             $test_stats[$test_id_key]['total_percentage'] += $percentage;
             $test_stats[$test_id_key]['grades'][$result['grade']]++;
             
-            // Добавляем студента в статистику теста
             if (!in_array($result['student_id'], $test_stats[$test_id_key]['students'])) {
                 $test_stats[$test_id_key]['students'][] = $result['student_id'];
             }
             
-            // Статистика по датам для графика
             $date = date('Y-m-d', strtotime($result['date']));
             if (!isset($date_stats[$date])) {
                 $date_stats[$date] = [
@@ -152,29 +135,27 @@ if (!empty($tests)) {
             $date_stats[$date]['count']++;
             $date_stats[$date]['total_percentage'] += $percentage;
             
-            // Сохраняем детальные результаты для таблицы
             $detailed_stats[] = $result;
         }
         
         $total_students = count($unique_students);
         $average_percentage = $total_tests > 0 ? round($total_percentage / $total_tests, 1) : 0;
         
-        // Рассчитываем средние по тестам
+
         foreach ($test_stats as &$stats) {
             $stats['average_percentage'] = $stats['count'] > 0 ? round($stats['total_percentage'] / $stats['count'], 1) : 0;
             $stats['unique_students'] = count($stats['students']);
         }
         
-        // Подготавливаем данные для графика
-        ksort($date_stats); // Сортируем по дате
+
+        ksort($date_stats);
         
         $graph_labels = [];
         $graph_averages = [];
         $graph_counts = [];
         
-        // Берем последние 14 дней или все дни, если меньше
         $dates = array_keys($date_stats);
-        $start_index = max(0, count($dates) - 14); // Показываем последние 14 дней
+        $start_index = max(0, count($dates) - 14);
         
         for ($i = $start_index; $i < count($dates); $i++) {
             $date = $dates[$i];
@@ -252,7 +233,6 @@ if (!empty($tests)) {
             </div>
             
             <div class="stats-container">
-                <!-- Фильтры -->
                 <div class="filters-section">
                     <h3>Фильтры статистики</h3>
                     <form method="GET" action="teacher_statistics.php">
@@ -305,16 +285,14 @@ if (!empty($tests)) {
                         <a href="teacher_statistics.php" class="btn btn-primary">Показать все результаты</a>
                     </div>
                 <?php else: ?>
-                    <!-- Вкладки -->
                     <div class="tabs">
                         <div class="tab active" onclick="switchTab('overview')">Обзор</div>
                         <div class="tab" onclick="switchTab('tests')">Статистика по тестам</div>
                         <div class="tab" onclick="switchTab('details')">Детальные результаты</div>
                     </div>
                     
-                    <!-- Общая статистика -->
+
                     <div id="overview" class="tab-content active">
-                        <!-- Общие показатели -->
                         <div class="overview-cards">
                             <div class="overview-card">
                                 <div class="card-value"><?php echo $overall_stats['total_tests']; ?></div>
@@ -322,7 +300,7 @@ if (!empty($tests)) {
                             </div>
                             <div class="overview-card">
                                 <div class="card-value"><?php echo $overall_stats['total_students']; ?></div>
-                                <div class="card-label">Уникальных студентов</div>
+                                <div class="card-label">Студентов</div>
                             </div>
                             <div class="overview-card">
                                 <div class="card-value"><?php echo $overall_stats['average_percentage']; ?>%</div>
@@ -340,8 +318,6 @@ if (!empty($tests)) {
                                 <div class="card-label">Активных тестов</div>
                             </div>
                         </div>
-                        
-                        <!-- Распределение по оценкам -->
                         <div class="grades-overview">
                             <h3>Распределение по оценкам</h3>
                             <div class="grades-grid">
@@ -380,7 +356,6 @@ if (!empty($tests)) {
                             </div>
                         </div>
                         
-                        <!-- График успеваемости по дням -->
                         <div class="charts-section">
                             <h3>Динамика успеваемости за последние 14 дней</h3>
                             <div class="chart-container">
@@ -430,29 +405,16 @@ if (!empty($tests)) {
                                     Показано <?php echo count($detailed_stats); ?> записей
                                     <?php if ($test_id): ?> по выбранному тесту<?php endif; ?>
                                 </div>
-                                <div>
-                                    <label>Сортировать по: </label>
-                                    <select class="sort-select" onchange="changeSort(this.value)">
-                                        <option value="date_desc" <?php echo $sort_by == 'date_desc' ? 'selected' : ''; ?>>Дате (сначала новые)</option>
-                                        <option value="date_asc" <?php echo $sort_by == 'date_asc' ? 'selected' : ''; ?>>Дате (сначала старые)</option>
-                                        <option value="student_asc" <?php echo $sort_by == 'student_asc' ? 'selected' : ''; ?>>Студенту (А-Я)</option>
-                                        <option value="student_desc" <?php echo $sort_by == 'student_desc' ? 'selected' : ''; ?>>Студенту (Я-А)</option>
-                                        <option value="test_asc" <?php echo $sort_by == 'test_asc' ? 'selected' : ''; ?>>Тесту (А-Я)</option>
-                                        <option value="test_desc" <?php echo $sort_by == 'test_desc' ? 'selected' : ''; ?>>Тесту (Я-А)</option>
-                                        <option value="score_desc" <?php echo $sort_by == 'score_desc' ? 'selected' : ''; ?>>Результату (высокие→низкие)</option>
-                                        <option value="score_asc" <?php echo $sort_by == 'score_asc' ? 'selected' : ''; ?>>Результату (низкие→высокие)</option>
-                                    </select>
-                                </div>
                             </div>
                             
                             <table class="results-table">
                                 <thead>
                                     <tr>
-                                        <th onclick="changeSort('student_asc')">Студент</th>
-                                        <th onclick="changeSort('test_asc')">Тест</th>
-                                        <th onclick="changeSort('date_desc')">Дата</th>
+                                        <th>Студент</th>
+                                        <th>Тест</th>
+                                        <th>Дата</th>
                                         <th>Баллы</th>
-                                        <th onclick="changeSort('score_desc')">Результат</th>
+                                        <th>Результат</th>
                                         <th>Оценка</th>
                                     </tr>
                                 </thead>
@@ -460,13 +422,11 @@ if (!empty($tests)) {
                                     <?php foreach ($detailed_stats as $result): 
                                         $percentage = floatval($result['percentage']);
                                         
-                                        // Формируем полное имя студента
                                         $full_name = $result['surname'] . ' ' . $result['name'];
                                         if (!empty($result['patronymic'])) {
                                             $full_name .= ' ' . $result['patronymic'];
                                         }
                                         
-                                        // Определяем класс для цвета
                                         if ($percentage >= $result['grade5']) {
                                             $percentage_class = 'percentage-excellent';
                                         } elseif ($percentage >= $result['grade4']) {
@@ -493,7 +453,6 @@ if (!empty($tests)) {
                         </div>
                     </div>
                     
-                    <!-- Экспорт -->
                     <div class="export-section">
                         <button class="btn btn-outline" onclick="printStatistics()">
                             🖨️ Печать отчета
@@ -519,7 +478,6 @@ if (!empty($tests)) {
     </footer>
 
     <script>
-        // Переключение вкладок
         function switchTab(tabName) {
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.classList.remove('active');
@@ -532,17 +490,10 @@ if (!empty($tests)) {
             document.getElementById(tabName).classList.add('active');
         }
         
-        // Изменение сортировки
-        function changeSort(sortValue) {
-            document.getElementById('sortValue').value = sortValue;
-            document.getElementById('filterForm').submit();
-        }
-        // Печать отчета
         function printStatistics() {
             window.print();
         }
         
-        // Инициализация графиков
         document.addEventListener('DOMContentLoaded', function() {
             <?php if (!empty($overall_stats['graph_data']['labels'])): ?>
             const ctx = document.getElementById('performanceChart').getContext('2d');

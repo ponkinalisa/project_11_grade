@@ -15,7 +15,6 @@ $statistics = [];
 
 if ($test_id) {
     try {
-        // Получаем основную информацию о тесте
         $sql = "SELECT t.name as test_name, t.*, u.name, u.surname 
                 FROM tests t 
                 JOIN users u ON t.author_id = u.id 
@@ -28,7 +27,6 @@ if ($test_id) {
             die("Тест не найден или у вас нет прав для просмотра результатов");
         }
         
-        // Получаем результаты прохождения теста
         $sql = "SELECT r.*, u.name, u.surname, 
                        (SELECT COUNT(*) FROM test_results WHERE test_id = :test_id) as total_attempts,
                        (SELECT COUNT(DISTINCT student_id) FROM test_results WHERE test_id = :test_id) as unique_students
@@ -41,7 +39,6 @@ if ($test_id) {
         $results_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         
-        // Получаем статистику по тесту
         if (!empty($results_data)) {
             $scores = array_column($results_data, 'score');
             $statistics = [
@@ -53,7 +50,6 @@ if ($test_id) {
                 'completion_rate' => round((count($results_data) / $results_data[0]['total_attempts']) * 100, 1)
             ];
             
-            // Распределение по оценкам
             $grades_distribution = [
                 '5' => 0,
                 '4' => 0,
@@ -95,7 +91,6 @@ if ($test_id) {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <!-- Шапка -->
     <header class="header">
         <div class="container">
             <div class="header-content">
@@ -113,11 +108,8 @@ if ($test_id) {
             </div>
         </div>
     </header>
-
-    <!-- Основной контент -->
     <main class="main-content">
         <div class="container">
-            <!-- Заголовок страницы -->
             <div class="page-header">
                 <h1>Результаты теста: <?php echo htmlspecialchars($test_info['test_name'] ?? 'Неизвестный тест'); ?></h1>
                 <a href="teacher_main.php" class="back-btn">← Назад к тестам</a>
@@ -187,7 +179,6 @@ if ($test_id) {
                         <div class="tab" onclick="switchTab('analysis')">Анализ теста</div>
                     </div>
                     
-                    <!-- Таблица результатов -->
                     <div id="results" class="tab-content active">
                         <div class="filters">
                             
@@ -244,16 +235,8 @@ if ($test_id) {
                             </tbody>
                         </table>
                     </div>
-                    
-                    <!-- Анализ теста -->
-                    <div id="analysis" class="tab-content">
-                        <h3>Анализ сложности заданий</h3>
-                        <p>Здесь будет отображаться статистика по каждому заданию теста...</p>
-                        <!-- Дополнительный анализ можно добавить позже -->
-                    </div>
                 </div>
-                
-                <!-- Экспорт результатов -->
+            
                 <div class="results-container">
                     <h3>Экспорт результатов</h3>
                     <div class="export-options">
@@ -261,8 +244,6 @@ if ($test_id) {
                     </div>
                 </div>
             <?php endif; ?>
-            
-            <!-- Кнопки действий -->
             <div class="action-buttons">
                 <a href="teacher_main.php" class="btn btn-secondary">Назад к тестам</a>
                 <?php if ($test_id): ?>
@@ -272,7 +253,6 @@ if ($test_id) {
         </div>
     </main>
 
-    <!-- Подвал -->
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
@@ -288,7 +268,6 @@ if ($test_id) {
     </footer>
 
     <script>
-        // Переключение вкладок
         function switchTab(tabName) {
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.classList.remove('active');
@@ -301,7 +280,6 @@ if ($test_id) {
             document.getElementById(tabName).classList.add('active');
         }
         
-        // Фильтрация результатов
         function filterResults() {
             const groupFilter = document.getElementById('groupFilter').value;
             const gradeFilter = document.getElementById('gradeFilter').value;
@@ -322,28 +300,14 @@ if ($test_id) {
             });
         }
         
-        // Показать детальный результат
         function showDetailedResult(resultId) {
             alert('Детальная информация о результате с ID: ' + resultId);
-            // Здесь можно реализовать модальное окно с детальной информацией
-        }
-        
-        // Экспорт функций
-        function exportToCSV() {
-            alert('Экспорт в CSV выполнен');
-            // Реализация экспорта в CSV
-        }
-        
-        function exportToPDF() {
-            alert('Экспорт в PDF выполнен');
-            // Реализация экспорта в PDF
         }
         
         function printResults() {
             window.print();
         }
         
-        // Инициализация графиков
         document.addEventListener('DOMContentLoaded', function() {
             <?php if (!empty($statistics['grades_distribution'])): ?>
             const ctx = document.getElementById('gradesChart').getContext('2d');

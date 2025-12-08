@@ -157,7 +157,7 @@ try{
         <div class="container">
             <div class="page-header">
                 <h1>Создание нового теста</h1>
-                <a href="#" class="back-btn">← Назад к тестам</a>
+                <a href="teacher_main.php" class="back-btn">← Назад к тестам</a>
             </div>
             
             <div class="form-container">

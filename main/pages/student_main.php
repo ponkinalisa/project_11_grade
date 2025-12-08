@@ -181,15 +181,5 @@ if (count($tests_in_result) > 0){
             </div>
         </div>
     </footer>
-
-    <script>
-        const startButtons = document.querySelectorAll('.start-test-btn');
-        startButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const testTitle = this.closest('.test-card').querySelector('.test-title').textContent;
-                alert(`Начинаем тест: "${testTitle}"`);
-            });
-        });
-    </script>
 </body>
 </html>

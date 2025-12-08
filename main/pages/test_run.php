@@ -28,12 +28,7 @@ if ($test_id) {
         $stmt = $pdo->prepare($sql);
         $stmt->execute(['student_id' => $_SESSION['id'], 'test_id' => $test_id]);
         $existing_attempt = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if ($existing_attempt) {
-            // Показываем сообщение, что тест уже пройден
-        }
         
-        // Получаем задания теста
         $sql = "SELECT * FROM types WHERE test_id = :test_id";
         $stmt = $pdo->prepare($sql);
         $stmt->execute(['test_id' => $test_id]);
@@ -193,7 +188,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
                     </div>
                 </div>
             <?php else: ?>
-                <div class="test-instructions">
+                <div class="test-container">
                     <h3>Инструкция по прохождению теста</h3>
                     <ul>
                         <li>На выполнение теста отводится <strong><?php echo $test_data['time']; ?> минут</strong></li>
@@ -347,6 +342,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
                 testStarted = true;
                 timerInterval = setInterval(function() {
                     timeLeft--;
+                    localStorage.setItem(`test_<?php echo $test_id; ?>_time`, timeLeft.toString());
                     const hours = Math.floor(timeLeft / 3600);
                     const minutes = Math.floor((timeLeft % 3600) / 60);
                     const seconds = timeLeft % 60;

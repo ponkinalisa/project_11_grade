@@ -16,7 +16,6 @@ if (isset($_SESSION['login'])){
 $error = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    echo 1;
     $login = trim($_POST['username']);
     $password = trim($_POST['password']);
 
@@ -141,14 +140,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="container">
 
         <div class="welcome-section">
-            <h1>Добро пожаловать в систему образовательного тестирования</h1>
+            <h1>Добро пожаловать в систему тестирования МБОУ Гимназии №42</h1>
             <p class="welcome-text">
-                Современная платформа для оценки знаний школьников, разработанная с учётом 
-                психологических особенностей восприятия и современных образовательных стандартов.
+                Данная система помогает учителям проводить объективное и быстрое оценивание, 
+                а ученикам - демонстрировать свои знания в комфортной обстановке.
             </p>
             <p class="welcome-text">
-                Наша система помогает учителям проводить объективное оценивание, 
-                а ученикам - демонстрировать свои знания в комфортной обстановке.
+                Желаем успехов в учебе!
             </p>
             
             <div class="features">
@@ -158,11 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 <div class="feature">
                     <span class="feature-check">✓</span>
-                    <span>Объективная система оценивания</span>
-                </div>
-                <div class="feature">
-                    <span class="feature-check">✓</span>
-                    <span>Безопасная среда для тестирования</span>
+                    <span>Точная настройка критериев оценивания и весов заданий</span>
                 </div>
                 <div class="feature">
                     <span class="feature-check">✓</span>

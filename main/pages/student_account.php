@@ -10,7 +10,6 @@ if (!isset($_SESSION['login'])){
 
 $user_id = $_SESSION['id'];
 
-// Получаем данные пользователя
 try {
     $sql = "SELECT * FROM users WHERE id = :id";
     $stmt = $pdo->prepare($sql);
@@ -24,7 +23,6 @@ try {
     die("Ошибка при получении данных пользователя: " . $e->getMessage());
 }
 
-// Получаем статистику по пройденным тестам
 $statistics = [
     'total_tests' => 0,
     'average_score' => 0,
@@ -40,7 +38,6 @@ $statistics = [
     'by_date' => []
 ];
 
-// Получаем все результаты тестов студента
 try {
     $sql = "SELECT tr.*, t.name as test_name, t.description, t.count_tasks, 
                    t.grade5, t.grade4, t.grade3, t.author_id,
@@ -62,11 +59,9 @@ try {
         $best_percentage = 0;
         
         foreach ($test_results as $result) {
-            // Рассчитываем процент выполнения
             $percentage = round(($result['score'] / $result['count_tasks']) * 100, 1);
             $total_percentage += $percentage;
             
-            // Определяем оценку
             if ($percentage >= $result['grade5']) {
                 $grade = '5';
                 $statistics['grades_distribution']['5']++;
@@ -81,14 +76,12 @@ try {
                 $statistics['grades_distribution']['2']++;
             }
             
-            // Лучший результат
             if ($percentage > $best_percentage) {
                 $best_percentage = $percentage;
                 $statistics['best_score'] = $percentage;
             }
             
-            // Группировка по предмету (предположим, что предмет в названии теста)
-            $subject = "Общий"; // В реальной системе нужно брать из отдельного поля
+            $subject = "Общий";
             if (!isset($statistics['by_subject'][$subject])) {
                 $statistics['by_subject'][$subject] = [
                     'count' => 0,
@@ -99,7 +92,6 @@ try {
             $statistics['by_subject'][$subject]['count']++;
             $statistics['by_subject'][$subject]['total_percentage'] += $percentage;
             
-            // Группировка по дате (по месяцам)
             $month = date('Y-m', strtotime($result['date']));
             if (!isset($statistics['by_date'][$month])) {
                 $statistics['by_date'][$month] = [
@@ -113,23 +105,19 @@ try {
             
             $total_score += $result['score'];
         }
-        
-        // Рассчитываем средние значения
+    
         $statistics['average_score'] = round($total_percentage / $statistics['total_tests'], 1);
         
-        // Рассчитываем средние по предметам
         foreach ($statistics['by_subject'] as $subject => $data) {
             $statistics['by_subject'][$subject]['average'] = 
                 round($data['total_percentage'] / $data['count'], 1);
         }
         
-        // Рассчитываем средние по месяцам
         foreach ($statistics['by_date'] as $month => $data) {
             $statistics['by_date'][$month]['average'] = 
                 round($data['total_percentage'] / $data['count'], 1);
         }
         
-        // Последняя дата теста
         $statistics['last_test_date'] = $test_results[0]['date'];
     }
     
@@ -137,7 +125,6 @@ try {
     die("Ошибка при получении статистики: " . $e->getMessage());
 }
 
-// Выход из системы
 if (isset($_POST['logout'])) {
     session_destroy();
     header('Location: ../../index.php');
@@ -180,7 +167,6 @@ if (isset($_POST['logout'])) {
     <main class="main-content">
         <div class="container">
             <div class="profile-container">
-                <!-- Информация о пользователе -->
                 <div class="profile-header">
                     <div class="profile-avatar">
                         <?php echo(mb_substr($_SESSION['i'], 0, 1) . mb_substr($_SESSION['f'], 0, 1)); ?>
@@ -193,7 +179,6 @@ if (isset($_POST['logout'])) {
                     </div>
                 </div>
                 
-                <!-- Общая статистика -->
                 <h2>Общая статистика</h2>
                 
                 <?php if ($statistics['total_tests'] == 0): ?>
@@ -225,7 +210,6 @@ if (isset($_POST['logout'])) {
                         </div>
                     </div>
                     
-                    <!-- Распределение по оценкам -->
                     <div class="grades-distribution">
                         <h3>Распределение по оценкам</h3>
                         <div class="grades-grid">
@@ -248,13 +232,11 @@ if (isset($_POST['logout'])) {
                         </div>
                     </div>
                     
-                    <!-- Статистика по месяцам -->
                     <div class="monthly-stats">
                         <h3>Статистика по месяцам</h3>
                         <?php if (!empty($statistics['by_date'])): ?>
                             <div class="month-grid">
                                 <?php 
-                                // Сортируем по дате (от новых к старым)
                                 krsort($statistics['by_date']);
                                 $counter = 0;
                                 foreach ($statistics['by_date'] as $month => $data): 
@@ -293,7 +275,6 @@ if (isset($_POST['logout'])) {
                         <?php endif; ?>
                     </div>
                     
-                    <!-- История прохождения тестов -->
                     <div class="test-history">
                         <h3>История прохождения тестов</h3>
                         
@@ -312,7 +293,6 @@ if (isset($_POST['logout'])) {
                                 <?php foreach ($test_results as $result): 
                                     $percentage = round(($result['score'] / $result['count_tasks']) * 100, 1);
                                     
-                                    // Определяем оценку и класс для цвета
                                     if ($percentage >= $result['grade5']) {
                                         $grade = '5';
                                         $percentage_class = 'percentage-excellent';
@@ -343,7 +323,6 @@ if (isset($_POST['logout'])) {
                     </div>
                 <?php endif; ?>
                 
-                <!-- Кнопка выхода -->
                 <form method="post" class="logout-form">
                     <button type="submit" name="logout" class="btn btn-danger">
                         <span>Выйти из системы</span>
@@ -367,13 +346,5 @@ if (isset($_POST['logout'])) {
             </div>
         </div>
     </footer>
-
-    <script>
-        // Инициализация графиков (если нужно)
-        document.addEventListener('DOMContentLoaded', function() {
-            // Здесь можно добавить графики с использованием Chart.js
-            console.log('Личный кабинет загружен');
-        });
-    </script>
 </body>
 </html>

@@ -523,7 +523,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
         let taskTypeCount = <?php echo count($types_data) ?: 1; ?>;
         let taskCounts = {};
         
-        // Инициализация счетчиков заданий для каждого типа
         <?php if (!empty($types_data)): ?>
             <?php foreach ($types_data as $index => $type): ?>
                 <?php $type_number = $index + 1; ?>
@@ -533,7 +532,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
             taskCounts = {1: 1};
         <?php endif; ?>
         
-        // Обновление значения для оценки "2"
         function updateGrade2Value() {
             const grade3Value = document.getElementById('grade3').value;
             document.getElementById('grade2Value').textContent = grade3Value + '%';
@@ -548,7 +546,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
             document.getElementById('countTasks').innerText = String(a);
         }
         
-        // Предпросмотр изображения
         function previewImage(input) {
             const preview = input.parentElement.querySelector('.image-preview');
             if (input.files && input.files[0]) {
