@@ -28,6 +28,12 @@ if ($test_id) {
         $stmt = $pdo->prepare($sql);
         $stmt->execute(['student_id' => $_SESSION['id'], 'test_id' => $test_id]);
         $existing_attempt = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($existing_attempt and $existing_attempt['mark'] == null){
+            $variant = $existing_attempt['variant'];
+            $tasks_data = json_decode($variant, true);
+
+        }elseif (!$existing_attempt){
         
         $sql = "SELECT * FROM types WHERE test_id = :test_id";
         $stmt = $pdo->prepare($sql);
@@ -69,6 +75,18 @@ if ($test_id) {
             }
         }
         shuffle($tasks_data);
+        $variant = json_encode($tasks_data,  JSON_UNESCAPED_UNICODE);
+        $sql = "INSERT INTO test_results (student_id, test_id, variant) 
+                VALUES (:student_id, :test_id, :variant)";
+        
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([
+                'student_id' => $_SESSION['id'],
+                'test_id' => $test_id,
+                'variant' => $variant,
+            ]);
+
+        }
 
     } catch (PDOException $e) {
         echo 'Ошибка при загрузке теста: ' . $e->getMessage();
@@ -110,10 +128,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
         $stmt->execute(['student_id' => $_SESSION['id'], 'test_id' => $test_id]);
 
         $test_exist = $stmt->fetchAll();
-
         if (count($test_exist) == 0){
-            $sql = "INSERT INTO test_results (student_id, test_id, score, mark, date) 
-                VALUES (:student_id, :test_id, :score, :mark, NOW())";
+            $sql = "INSERT INTO test_results (student_id, test_id, score, mark, date, variant) 
+                VALUES (:student_id, :test_id, :score, :mark, NOW(), :variant)";
+        
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([
+                'student_id' => $_SESSION['id'],
+                'test_id' => $test_id,
+                'score' => $score,
+                'mark' => $mark,
+                'variant' => $variant
+            ]);
+        
+        $result_id = $pdo->lastInsertId();
+        }
+
+        if (count($test_exist) != 0){
+            $sql = "UPDATE test_results SET score = :score, mark = :mark, date = NOW() 
+                WHERE student_id = :student_id AND test_id = :test_id";
         
             $stmt = $pdo->prepare($sql);
             $stmt->execute([
@@ -150,8 +183,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <div class="logo-icon">E</div>
-                    <div class="logo-text">EduTest</div>
+                    <div class="logo-icon">42</div>
                 </div>
                 
                 <div class="user-menu">
@@ -175,7 +207,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
                         <a href="student_tests.php" class="btn btn-primary">Вернуться к тестам</a>
                     </div>
                 </div>
-            <?php elseif ($existing_attempt): ?>
+            <?php elseif ($existing_attempt and $existing_attempt['mark'] != null): ?>
                 <div class="test-container">
                     <div class="already-completed">
                         <div class="already-completed-icon">📝</div>
@@ -223,7 +255,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
                         
                         <div class="progress-container">
                             <div class="progress-bar">
-                                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                                <div class="progress-fill" id="progressFill" style="width: 0%; background-color: green;"></div>
                             </div>
                             <div class="progress-text">
                                 <span>Прогресс: <span id="progressText">0</span>%</span>
@@ -242,7 +274,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
                             </div>
                             <div class="task-numbers" id="taskNumbers">
                                 <?php foreach ($tasks_data as $index => $task): ?>
-                                    <div class="task-number <?php echo $index === 0 ? 'current' : ''; ?>" 
+                                    <div class="task-number" 
                                          onclick="goToTask(<?php echo $index; ?>)">
                                         <?php echo $index + 1; ?>
                                     </div>
@@ -276,7 +308,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
                                                 name="answers[<?php echo $task['id']; ?>]"
                                                 class="answer-input"
                                                 placeholder="Введите ваш ответ здесь..."
-                                                oninput="markTaskAnswered(<?php echo $index; ?>)"
+                                                oninput="markTaskAnswered(<?php echo $index; ?>, <?php echo $task['id']; ?>)"
                                                 rows="4"
                                             ></textarea>
                                         </div>
@@ -303,10 +335,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
     <div class="confirmation-modal" id="exitModal">
         <div class="modal-content">
             <h3>Выход из теста</h3>
-            <p>Ваш прогресс будет сохранен. Вы сможете продолжить тест позже.</p>
+            <p>Вы уверены, что хотите покинуть страницу прохождения теста?</p>
             <div class="modal-buttons">
                 <button class="btn btn-secondary" onclick="hideExitConfirmation()">Отмена</button>
-                <a href="student_tests.php" class="btn btn-outline">Выйти</a>
+                <a href="student_main.php" class="btn btn-outline">Выйти</a>
             </div>
         </div>
     </div>
@@ -330,12 +362,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
     </div>
 
     <script>
-        let currentTaskIndex = 0;
+        var currentTaskIndex = 0;
         const totalTasks = <?php echo count($tasks_data); ?>;
-        let answeredTasks = new Set();
-        let timeLeft = <?php echo $test_data['time'] * 60; ?>; 
-        let timerInterval;
-        let testStarted = false;
+        var answeredTasks = new Array();
+        var timeLeft = <?php echo $test_data['time'] * 60; ?>; 
+        var timerInterval;
+        var testStarted = false;
         
         function startTimer() {
             if (!testStarted) {
@@ -343,6 +375,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
                 timerInterval = setInterval(function() {
                     timeLeft--;
                     localStorage.setItem(`test_<?php echo $test_id; ?>_time`, timeLeft.toString());
+                    localStorage.setItem(`end<?php echo $test_id; ?>`, 0);
                     const hours = Math.floor(timeLeft / 3600);
                     const minutes = Math.floor((timeLeft % 3600) / 60);
                     const seconds = timeLeft % 60;
@@ -359,6 +392,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
                     
                     if (timeLeft <= 0) {
                         clearInterval(timerInterval);
+                        localStorage.setItem(`end<?php echo $test_id; ?>`, 1);
                         alert('Время вышло! Тест будет автоматически отправлен.');
                         submitTest();
                     }
@@ -367,13 +401,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
         }
         
         function goToTask(index) {
+            for (let i = 0; i < index; i++){
+                document.getElementById(`task-${i}`).style.display = 'none';
+            }
             document.getElementById(`task-${currentTaskIndex}`).style.display = 'none';
             document.querySelectorAll('.task-number')[currentTaskIndex].classList.remove('current');
             
             currentTaskIndex = index;
             document.getElementById(`task-${currentTaskIndex}`).style.display = 'block';
             document.querySelectorAll('.task-number')[currentTaskIndex].classList.add('current');
-            document.querySelectorAll('.task-number')[currentTaskIndex].classList.add('visited');
+            localStorage.setItem(`currentTaskIndex<?php echo $test_id; ?>`, currentTaskIndex.toString());
             updateNavigationButtons();
             updateProgress();
             
@@ -400,18 +437,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
             document.getElementById('currentTask').textContent = currentTaskIndex + 1;
         }
         
-        function markTaskAnswered(taskIndex) {
-            answeredTasks.add(taskIndex);
-            document.querySelectorAll('.task-number')[taskIndex].classList.add('answered');
+        function markTaskAnswered(taskIndex, id) {
+            console.log(answeredTasks);
+            console.log(document.querySelectorAll('.task-number'));
+            if (answeredTasks.indexOf(taskIndex) == -1){
+                answeredTasks.push(taskIndex);
+                document.querySelectorAll('.task-number')[taskIndex].classList.add('answered');
+                localStorage.setItem(`answeredTasks<?php echo $test_id; ?>`, JSON.stringify(answeredTasks));
+            } else{
+                console.log(document.getElementById('answer-'+id).value);
+                if (id != null & document.getElementById('answer-'+id).value == ''){
+                    console.log(0);
+                    answeredTasks.splice(answeredTasks.indexOf(taskIndex), 1);
+                    console.log(answeredTasks);
+                    document.querySelectorAll('.task-number')[taskIndex].classList.remove('answered');
+                    localStorage.setItem(`answeredTasks<?php echo $test_id; ?>`, JSON.stringify(answeredTasks));
+                }
+            }
             updateProgress();
             autoSaveProgress();
         }
         
         function updateProgress() {
-            const progress = (answeredTasks.size / totalTasks) * 100;
+            const progress = (answeredTasks.length / totalTasks) * 100;
             document.getElementById('progressFill').style.width = `${progress}%`;
             document.getElementById('progressText').textContent = Math.round(progress);
-            document.getElementById('answeredCount').textContent = answeredTasks.size;
+            document.getElementById('answeredCount').textContent = answeredTasks.length;
         }
         
         function autoSaveProgress() {
@@ -423,16 +474,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
                     answers[key] = value;
                 }
             }
-            
+
             localStorage.setItem(`test_<?php echo $test_id; ?>_answers`, JSON.stringify(answers));
             localStorage.setItem(`test_<?php echo $test_id; ?>_time`, timeLeft.toString());
-            
+
             showAutoSaveIndicator();
         }
         
         function saveProgress() {
             autoSaveProgress();
-            alert('Прогресс успешно сохранен!');
         }
         
         function showAutoSaveIndicator() {
@@ -444,8 +494,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
         }
         
         function loadSavedProgress() {
+            console.log('load');
             const savedAnswers = localStorage.getItem(`test_<?php echo $test_id; ?>_answers`);
             const savedTime = localStorage.getItem(`test_<?php echo $test_id; ?>_time`);
+            currentTaskIndex = Number(localStorage.getItem(`currentTaskIndex<?php echo $test_id; ?>`));
+            console.log(currentTaskIndex);
+            answeredTasks1 = localStorage.getItem(`answeredTasks<?php echo $test_id; ?>`);
+            if (answeredTasks1){
+                answeredTasks = JSON.parse(answeredTasks1);
+            }
+            console.log(answeredTasks);
+            if (currentTaskIndex - 1 >= 0){
+                currentTaskIndex = currentTaskIndex - 1;
+                goToTask(currentTaskIndex + 1);
+            }else{
+                currentTaskIndex = 0;
+                goToTask(currentTaskIndex);
+            }
+
             
             if (savedAnswers) {
                 const answers = JSON.parse(savedAnswers);
@@ -459,7 +525,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
                             task => task.querySelector(`textarea[name="${key}"]`)
                         );
                         if (taskIndex !== -1) {
-                            answeredTasks.add(taskIndex);
                             document.querySelectorAll('.task-number')[taskIndex].classList.add('answered');
                         }
                     }
@@ -477,6 +542,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
                 document.getElementById('timer').textContent = 
                     `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             }
+            if (localStorage.getItem(`end<?php echo $test_id; ?>`) == 1){
+                submitTest();
+            }
         }
         
         function showSubmitConfirmation() {
@@ -489,8 +557,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
         
         function submitTest() {
             clearInterval(timerInterval);
-            localStorage.removeItem(`test_<?php echo $test_id; ?>_answers`);
-            localStorage.removeItem(`test_<?php echo $test_id; ?>_time`);
+            localStorage.clear();
             document.getElementById('testForm').submit();
         }
         
@@ -503,10 +570,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
         }
         function setupBeforeUnload() {
             window.addEventListener('beforeunload', function(e) {
-                if (answeredTasks.size > 0 && timeLeft > 0) {
+                if (answeredTasks.length > 0 && timeLeft > 0) {
                     e.preventDefault();
                     e.returnValue = '';
-                    return 'Вы уверены, что хотите покинуть страницу? Ваш прогресс будет сохранен, и вы сможете продолжить позже.';
+                    return 'Вы уверены, что хотите покинуть страницу? Ваш прогресс будет потерян.';
                 }
             });
         }
@@ -514,17 +581,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
             updateProgress();
             setupBeforeUnload();
             loadSavedProgress();
-            document.addEventListener('click', function() {
-                if (!testStarted) {
-                    startTimer();
-                }
-            }, { once: true });
-            
-            document.addEventListener('keydown', function() {
-                if (!testStarted) {
-                    startTimer();
-                }
-            }, { once: true });
+            if (!testStarted) {
+                startTimer();
+            } 
         });
         
         document.addEventListener('keydown', function(e) {

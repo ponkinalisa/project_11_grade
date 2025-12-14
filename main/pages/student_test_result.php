@@ -85,18 +85,23 @@ if ($attempt_id) {
                     $grade = '5';
                     $grade_class = 'score-excellent';
                     $grade_label = 'Отлично';
+                    $circle_color = 'green';
                 } elseif ($percentage >= $test['grade4']) {
                     $grade = '4';
                     $grade_class = 'score-good';
                     $grade_label = 'Хорошо';
+                    $circle_color = '#ffbb00';
                 } elseif ($percentage >= $test['grade3']) {
                     $grade = '3';
                     $grade_class = 'score-satisfactory';
                     $grade_label = 'Удовлетворительно';
+                    $circle_color = '#ff6200';
                 } else {
                     $grade = '2';
                     $grade_class = 'score-poor';
                     $grade_label = 'Неудовлетворительно';
+                    $circle_color = 'red';
+
                 }
             ?>
                 <div class="result-container">
@@ -125,7 +130,8 @@ if ($attempt_id) {
                             <circle class="circle-bg" cx="60" cy="60" r="54"></circle>
                             <circle class="circle-progress" cx="60" cy="60" r="54" 
                                     stroke-dasharray="339.292" 
-                                    stroke-dashoffset="<?php echo 339.292 * (1 - $percentage / 100); ?>"></circle>
+                                    stroke-dashoffset="<?php echo 339.292 * (1 - $percentage / 100); ?>" 
+                                    style="<?php echo $circle_color; ?>"></circle>
                             <text x="60" y="60" text-anchor="middle" dy="0" class="circle-text">
                                 <?php echo round($percentage); ?>%
                             </text>

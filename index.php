@@ -67,9 +67,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $get_response = json_encode(json_decode(curl_exec($ch), true), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
         $get_http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
-        echo "GET запрос:\n";
-        echo "HTTP код: $get_http_code\n";
-        echo "Ответ: " . $get_response;
         $main = json_decode($get_response, true);
 
         $i = $main['i'];

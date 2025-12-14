@@ -248,8 +248,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <div class="logo-icon">E</div>
-                    <div class="logo-text">EduTest</div>
+                    <div class="logo-icon">42</div>
                 </div>
                 
                 <div class="user-menu">

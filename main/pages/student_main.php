@@ -181,5 +181,9 @@ if (count($tests_in_result) > 0){
             </div>
         </div>
     </footer>
+
+    <script>
+        localStorage.clear();
+    </script>
 </body>
 </html>
