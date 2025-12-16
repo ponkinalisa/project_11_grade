@@ -217,6 +217,13 @@ if (!empty($tests)) {
                             <span>Выйти</span>
                         </a>
                     </div>
+                    <?php
+                    if ($_SESSION['status'] == 'admin'){
+                        echo('<a class="btn btn-secondary" href="admin.php">
+                        <span>Вернуться в админ-панель</span>
+                    </a>');
+                    }
+                    ?>
                 </div>
             </div>
         </div>
@@ -357,7 +364,7 @@ if (!empty($tests)) {
                         </div>
                         
                         <div class="charts-section">
-                            <h3>Динамика успеваемости за последние 14 дней</h3>
+                            <h3>Динамика успеваемости</h3>
                             <div class="chart-container">
                                 <canvas id="performanceChart"></canvas>
                             </div>
@@ -440,7 +447,7 @@ if (!empty($tests)) {
                                     <tr>
                                         <td><?php echo htmlspecialchars($full_name); ?></td>
                                         <td><?php echo htmlspecialchars($result['test_name']); ?></td>
-                                        <td><?php echo date('d.m.Y H:i', strtotime($result['date'])); ?></td>
+                                        <td><?php echo date('d.m.Y', strtotime($result['date'])); ?></td>
                                         <td><?php echo $result['score']; ?>/<?php echo $result['count_tasks']; ?></td>
                                         <td class="percentage-cell <?php echo $percentage_class; ?>">
                                             <?php echo $percentage; ?>%

@@ -18,7 +18,7 @@
     width: 100px;
     height: 100px;
     border-radius: 50%;
-    background: var(--primary-color);
+    background: var(--primary);
     color: white;
     display: flex;
     align-items: center;
@@ -63,13 +63,13 @@
     padding: 25px;
     border-radius: 8px;
     text-align: center;
-    border-top: 4px solid var(--primary-color);
+    border-top: 4px solid var(--primary);
 }
 
 .stat-value-large {
     font-size: 2.5rem;
     font-weight: bold;
-    color: var(--primary-color);
+    color: var(--primary);
     margin-bottom: 10px;
 }
 
@@ -164,7 +164,7 @@
 }
 
 .btn-primary {
-    background: var(--primary-color);
+    background: var(--primary);
     color: white;
 }
 
@@ -175,8 +175,8 @@
 
 .btn-outline {
     background: transparent;
-    border: 1px solid var(--primary-color);
-    color: var(--primary-color);
+    border: 1px solid var(--primary);
+    color: var(--primary);
 }
 
 .btn:hover {
@@ -210,7 +210,7 @@
 .month-average {
     font-size: 1.2rem;
     font-weight: bold;
-    color: var(--primary-color);
+    color: var(--primary);
 }
 
 .empty-state {
@@ -223,4 +223,17 @@
     font-size: 3rem;
     margin-bottom: 20px;
     opacity: 0.5;
+}
+@media (max-width: 500px){
+    .grades-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    .history-table{
+        width: 100%;
+        overflow-x: scroll;
+    }
+    .history-table th, 
+    .history-table td{
+        padding: 2px;
+    }
 }

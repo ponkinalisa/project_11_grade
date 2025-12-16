@@ -41,7 +41,7 @@
 .detail-value {
     font-size: 1.8rem;
     font-weight: bold;
-    color: var(--primary-color);
+    color: var(--primary);
     margin-bottom: 5px;
 }
 
@@ -74,7 +74,7 @@
 }
 
 .criteria-item.active {
-    background: var(--primary-color);
+    background: var(--primary);
     color: white;
 }
 
@@ -172,7 +172,7 @@
 
 .circle-progress {
     fill: none;
-    stroke: var(--primary-color);
+    stroke: var(--primary);
     stroke-width: 3;
     stroke-linecap: round;
     transform: rotate(-90deg);
@@ -213,14 +213,14 @@
 }
 
 .btn-primary {
-    background: var(--primary-color);
+    background: var(--primary);
     color: white;
 }
 
 .btn-outline {
     background: transparent;
-    border: 1px solid var(--primary-color);
-    color: var(--primary-color);
+    border: 1px solid var(--primary);
+    color: var(--primary);
 }
 
 .btn:hover {

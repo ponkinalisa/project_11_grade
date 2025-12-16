@@ -14,6 +14,15 @@ $sql = "SELECT * FROM tests WHERE is_active = 1";
 $stmt = $pdo->prepare($sql);
 $stmt->execute();
 $tests_all = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$sql = "SELECT * FROM test_results WHERE student_id = :id AND mark IS NULL";
+$stmt = $pdo->prepare($sql);
+$stmt->execute(['id' => $_SESSION['id']]);
+$cur_tests = $stmt->fetch(PDO::FETCH_ASSOC);
+if ($cur_tests){
+    header('Location: test_run.php?test_id='.$cur_tests['test_id']);
+    exit;
+}
 $tests = array();
 
 foreach ($tests_all as $test){
@@ -25,7 +34,7 @@ foreach ($tests_all as $test){
         array_push($tests, $test);
     }
 }
-$sql = "SELECT * FROM test_results WHERE student_id = :id";
+$sql = "SELECT * FROM test_results WHERE student_id = :id AND mark > 1";
 $stmt = $pdo->prepare($sql);
 $stmt->execute(['id' => $_SESSION['id']]);
 $tests_in_result = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -69,6 +78,13 @@ if (count($tests_in_result) > 0){
                         <span>Личный кабинет</span>
                         <span>→</span>
                     </a>
+                    <?php
+                    if ($_SESSION['status'] == 'admin'){
+                        echo('<a class="btn btn-secondary" href="admin.php">
+                        <span>Вернуться в админ-панель</span>
+                    </a>');
+                    }
+                    ?>
                 </div>
             </div>
         </div>

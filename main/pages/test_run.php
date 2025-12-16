@@ -20,11 +20,8 @@ if ($test_id) {
         $stmt->execute(['test_id' => $test_id]);
         $test_data = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        if (!$test_data) {
-            die("Тест не найден");
-        }
-
-        $sql = "SELECT * FROM test_results WHERE student_id = :student_id AND test_id = :test_id";
+        if ($test_data) {
+            $sql = "SELECT * FROM test_results WHERE student_id = :student_id AND test_id = :test_id";
         $stmt = $pdo->prepare($sql);
         $stmt->execute(['student_id' => $_SESSION['id'], 'test_id' => $test_id]);
         $existing_attempt = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -87,6 +84,9 @@ if ($test_id) {
             ]);
 
         }
+        }
+
+        
 
     } catch (PDOException $e) {
         echo 'Ошибка при загрузке теста: ' . $e->getMessage();
@@ -204,7 +204,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
                         <div class="empty-state-icon">❌</div>
                         <h3>Тест не найден</h3>
                         <p>Запрошенный тест не существует или у вас нет к нему доступа.</p>
-                        <a href="student_tests.php" class="btn btn-primary">Вернуться к тестам</a>
+                        <a href="student_main.php" class="btn btn-primary">Вернуться к тестам</a>
                     </div>
                 </div>
             <?php elseif ($existing_attempt and $existing_attempt['mark'] != null): ?>
@@ -215,7 +215,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
                         <p>Вы уже проходили этот тест <?php echo date('d.m.Y', strtotime($existing_attempt['date'])); ?>.</p>
                         <p>Ваш результат: <strong><?php echo $existing_attempt['score']; ?>/<?php echo $test_data['count_tasks']; ?></strong> (оценка: <?php echo $existing_attempt['mark']; ?>)</p>
                         <div style="margin-top: 20px;">
-                            <a href="student_tests.php" class="btn btn-primary">Вернуться к тестам</a>
+                            <a href="student_main.php" class="btn btn-primary">Вернуться к тестам</a>
                         </div>
                     </div>
                 </div>
@@ -317,11 +317,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
                             <?php endforeach; ?>
                         </div>
                         
-                        <div class="test-controls">
-                            <button type="button" class="btn btn-secondary" onclick="showExitConfirmation()">
-                                Выйти из теста
-                            </button>
-                            
+                        <div class="test-controls">            
                             <button type="button" class="btn" onclick="showSubmitConfirmation()">
                                 Завершить тест
                             </button>
@@ -331,17 +327,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
             <?php endif; ?>
         </div>
     </main>
-
-    <div class="confirmation-modal" id="exitModal">
-        <div class="modal-content">
-            <h3>Выход из теста</h3>
-            <p>Вы уверены, что хотите покинуть страницу прохождения теста?</p>
-            <div class="modal-buttons">
-                <button class="btn btn-secondary" onclick="hideExitConfirmation()">Отмена</button>
-                <a href="student_main.php" class="btn btn-outline">Выйти</a>
-            </div>
-        </div>
-    </div>
     
     <div class="confirmation-modal" id="submitModal">
         <div class="modal-content">
@@ -561,13 +546,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
             document.getElementById('testForm').submit();
         }
         
-        function showExitConfirmation() {
-            document.getElementById('exitModal').style.display = 'flex';
-        }
-        
-        function hideExitConfirmation() {
-            document.getElementById('exitModal').style.display = 'none';
-        }
         function setupBeforeUnload() {
             window.addEventListener('beforeunload', function(e) {
                 if (answeredTasks.length > 0 && timeLeft > 0) {

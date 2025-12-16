@@ -47,7 +47,7 @@ if ($attempt_id) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Результаты теста | Образовательная платформа</title>
-    <link rel="stylesheet" type="text/css" href="../css/new_test.css">
+    <link rel="stylesheet" type="text/css" href="../css/student_main.css">
     <link rel="stylesheet" type="text/css" href="../css/student_test_results.css">
 </head>
 <body>
@@ -63,6 +63,10 @@ if ($attempt_id) {
                         <div class="user-avatar"><?php echo(mb_substr($_SESSION['i'], 0, 1) . mb_substr($_SESSION['f'], 0, 1)); ?></div>
                         <div class="user-name"><?php echo($_SESSION['i'] . ' ' . $_SESSION['f']); ?></div>
                     </div>
+                    <a class="profile-btn" href="student_account.php">
+                        <span>Личный кабинет</span>
+                        <span>→</span>
+                    </a>
                 </div>
             </div>
         </div>
@@ -161,7 +165,7 @@ if ($attempt_id) {
                     </div>
                     
                     <div class="action-buttons">
-                        <a href="student_main.php" class="btn btn-outline">Вернуться к списку тестов</a>
+                        <a href="student_main.php" class="profile-btn">Вернуться к списку тестов</a>
                     </div>
                 </div>
                 

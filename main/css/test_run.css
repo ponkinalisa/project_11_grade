@@ -31,7 +31,7 @@
 .timer-display {
     font-size: 1.5rem;
     font-weight: bold;
-    color: var(--primary-color);
+    color: var(--primary);
 }
 
 .timer-warning {
@@ -59,7 +59,7 @@
 
 .progress-fill {
     height: 100%;
-    background: var(--primary-color);
+    background: var(--primary);
     transition: width 0.3s ease;
 }
 
@@ -105,7 +105,7 @@
 }
 
 .task-number.current {
-    border-color: var(--primary-color);
+    border-color: var(--primary);
     background: #17a3b847;
     color: #00373f;
 }
@@ -144,7 +144,7 @@
 }
 
 .task-weight {
-    background: var(--primary-color);
+    background: var(--primary);
     color: white;
     padding: 5px 10px;
     border-radius: 20px;
@@ -182,7 +182,7 @@
 
 .answer-input:focus {
     outline: none;
-    border-color: var(--primary-color);
+    border-color: var(--primary);
 }
 
 .test-controls {
@@ -208,7 +208,7 @@
 }
 
 .btn-primary {
-    background: var(--primary-color);
+    background: var(--primary);
     color: white;
 }
 
@@ -219,8 +219,9 @@
 
 .btn-outline {
     background: transparent;
-    border: 1px solid var(--primary-color);
-    color: var(--primary-color);
+    border: 1px solid var(--primary);
+    background: var(--primary);
+    color: white;
 }
 
 .btn-danger {

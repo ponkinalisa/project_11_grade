@@ -5,6 +5,10 @@
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
 
+a{
+        text-decoration: none;
+}
+
 :root {
     --primary: #3B82F6;
     --primary-dark: #2563EB;
@@ -118,6 +122,24 @@ body {
     background: var(--primary-dark);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
 }
 
 .main-content {

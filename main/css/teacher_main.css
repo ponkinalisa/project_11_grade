@@ -357,6 +357,24 @@ h1 {
     transition: all 0.3s ease;
     text-decoration: none;
 }
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
 
 .edit-btn {
     background: rgba(59, 130, 246, 0.1);

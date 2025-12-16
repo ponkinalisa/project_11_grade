@@ -18,13 +18,13 @@
     padding: 20px;
     border-radius: 8px;
     text-align: center;
-    border-left: 4px solid var(--primary-color);
+    border-left: 4px solid var(--primary);
 }
 
 .stat-value {
     font-size: 2rem;
     font-weight: bold;
-    color: var(--primary-color);
+    color: var(--primary);
     margin-bottom: 5px;
 }
 
@@ -109,7 +109,7 @@
 }
 
 .btn-primary {
-    background: var(--primary-color);
+    background: var(--primary);
     color: white;
 }
 
@@ -120,8 +120,8 @@
 
 .btn-outline {
     background: transparent;
-    border: 1px solid var(--primary-color);
-    color: var(--primary-color);
+    border: 1px solid var(--primary);
+    color: var(--primary);
 }
 
 .btn:hover {
@@ -175,8 +175,8 @@
 }
 
 .tab.active {
-    border-bottom-color: var(--primary-color);
-    color: var(--primary-color);
+    border-bottom-color: var(--primary);
+    color: var(--primary);
     font-weight: 600;
 }
 
@@ -214,4 +214,18 @@
 .chart-container {
     height: 300px;
     margin: 30px 0;
+}
+
+@media(max-width: 480px){
+    .grades-distribution{
+        grid-template-columns: 1fr 1fr;
+    }
+    .results-table{
+        width: 100%;
+        overflow-x: scroll;
+    }
+    .results-table th, 
+    .results-table td{
+        padding: 5px 5px;
+    }
 }

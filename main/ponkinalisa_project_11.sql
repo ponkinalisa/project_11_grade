@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Хост: localhost:3306
--- Время создания: Дек 08 2025 г., 14:15
+-- Время создания: Дек 16 2025 г., 17:09
 -- Версия сервера: 5.7.24
 -- Версия PHP: 8.3.1
 
@@ -56,7 +56,6 @@ INSERT INTO `tasks` (`id`, `test_id`, `type_id`, `text`, `answer`, `path_to_img`
 (96, 35, 78, 'Прямая, параллельная стороне AC треугольника ABC, пересекает стороны AB и BC в точках M и N соответственно, AB=66, AC=44, MN=24. Найдите AM.', 9, '../user_img/eaponkina/2713238584.png'),
 (97, 35, 78, 'Найдите тангенс угла AOB, изображённого\r\nна рисунке.', 20, '../user_img/eaponkina/7211303318.png'),
 (98, 35, 78, 'В треугольнике ABC угол C равен 90°, AC=24, AB=25. Найдите sinB.', 9, '../user_img/eaponkina/4197992674.png'),
-(102, 39, 82, 'какой-то текст задания', 123456, '../user_img/eaponkina/7855242546.jpg'),
 (103, 40, 83, 'сколько щупалец у осьминога?', 8, ''),
 (104, 40, 83, 'сколько миллиардов людей на планете?', 8, ''),
 (105, 40, 84, 'сколько хромосом у здорового человека?', 46, ''),
@@ -88,7 +87,6 @@ CREATE TABLE `tests` (
 INSERT INTO `tests` (`id`, `author_id`, `name`, `description`, `time`, `grade5`, `grade4`, `grade3`, `count_tasks`, `is_active`) VALUES
 (35, 2, 'математика', 'тест для проверки знаний учащихся по математике уровня средней школы', 40, 80, 60, 40, 3, 1),
 (38, 2, 'ознакомление', 'тест для демонстраций работы системы', 2, 75, 60, 35, 3, 1),
-(39, 2, 'Тест для удаления', 'Существует для того, чтобы показать процесс удаления тестов', 40, 85, 65, 45, 1, 0),
 (40, 2, 'тест для демонстрации', 'данный тест будет показан на защите проектной работы в целях ознакомления с функциональностью системы', 10, 85, 65, 45, 2, 1);
 
 -- --------------------------------------------------------
@@ -100,19 +98,20 @@ INSERT INTO `tests` (`id`, `author_id`, `name`, `description`, `time`, `grade5`,
 CREATE TABLE `test_results` (
   `student_id` int(11) NOT NULL,
   `test_id` int(11) NOT NULL,
-  `score` int(11) NOT NULL,
-  `mark` int(11) NOT NULL,
-  `date` date NOT NULL
+  `score` int(11) DEFAULT NULL,
+  `mark` int(11) DEFAULT NULL,
+  `date` date DEFAULT NULL,
+  `variant` json NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Дамп данных таблицы `test_results`
 --
 
-INSERT INTO `test_results` (`student_id`, `test_id`, `score`, `mark`, `date`) VALUES
-(2, 35, 0, 2, '2025-12-06'),
-(2, 38, 2, 4, '2025-12-08'),
-(2, 39, 0, 2, '2025-12-08');
+INSERT INTO `test_results` (`student_id`, `test_id`, `score`, `mark`, `date`, `variant`) VALUES
+(2, 35, 0, 2, '2025-12-14', '[{\"id\": 94, \"text\": \" Хорды AC и BD окружности пересекаются в точке P, \\r\\nBP=4, CP=12, DP=21. Найдите AP. \", \"answer\": 7, \"test_id\": 35, \"type_id\": 78, \"path_to_img\": \"../user_img/eaponkina/4449369316.png\"}, {\"id\": 87, \"text\": \"Проектор полностью освещает экран A высотой 80 см, расположенный на расстоянии 250 см от проектора. На каком наименьшем расстоянии (в сантиметрах) от проектора нужно расположить экран B высотой 160 см, чтобы он был полностью освещен, если настройки проектора остаются неизменными?\", \"answer\": 500, \"test_id\": 35, \"type_id\": 76, \"path_to_img\": \"\"}, {\"id\": 93, \"text\": \"В амфитеатре 14 рядов. В первом ряду 20 мест, а в каждом следующем на 3 места больше, чем в предыдущем. Сколько мест в десятом ряду амфитеатра?\", \"answer\": 47, \"test_id\": 35, \"type_id\": 77, \"path_to_img\": \"\"}]'),
+(2, 38, 0, 2, '2025-12-16', '[{\"id\": 85, \"text\": \"3 - 4 = ?\", \"answer\": -1, \"test_id\": 38, \"type_id\": 74, \"path_to_img\": \"\"}, {\"id\": 84, \"text\": \"2 + 2 = ?\", \"answer\": 4, \"test_id\": 38, \"type_id\": 73, \"path_to_img\": \"\"}, {\"id\": 86, \"text\": \"2 * 0.5 = \", \"answer\": 1, \"test_id\": 38, \"type_id\": 75, \"path_to_img\": \"\"}]'),
+(2, 40, 2, 5, '2025-12-16', '[{\"id\": 103, \"text\": \"сколько щупалец у осьминога?\", \"answer\": 8, \"test_id\": 40, \"type_id\": 83, \"path_to_img\": \"\"}, {\"id\": 105, \"text\": \"сколько хромосом у здорового человека?\", \"answer\": 46, \"test_id\": 40, \"type_id\": 84, \"path_to_img\": \"\"}]');
 
 -- --------------------------------------------------------
 
@@ -138,7 +137,6 @@ INSERT INTO `types` (`id`, `test_id`, `score`, `amount`) VALUES
 (76, 35, 1, 1),
 (77, 35, 1, 1),
 (78, 35, 1, 1),
-(82, 39, 1, 1),
 (83, 40, 1, 1),
 (84, 40, 1, 1);
 
@@ -162,7 +160,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `name`, `surname`, `status`, `patronymic`, `login`) VALUES
-(2, 'Елизавета', 'Понькина', 'student', 'Андреевна', 'eaponkina');
+(2, 'Елизавета', 'Понькина', 'admin', 'Андреевна', 'eaponkina');
 
 --
 -- Индексы сохранённых таблиц
@@ -194,7 +192,8 @@ ALTER TABLE `test_results`
 -- Индексы таблицы `types`
 --
 ALTER TABLE `types`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `test_id` (`test_id`);
 
 --
 -- Индексы таблицы `users`
@@ -253,6 +252,12 @@ ALTER TABLE `tests`
 ALTER TABLE `test_results`
   ADD CONSTRAINT `test_results_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `users` (`id`),
   ADD CONSTRAINT `test_results_ibfk_2` FOREIGN KEY (`test_id`) REFERENCES `tests` (`id`);
+
+--
+-- Ограничения внешнего ключа таблицы `types`
+--
+ALTER TABLE `types`
+  ADD CONSTRAINT `types_ibfk_1` FOREIGN KEY (`test_id`) REFERENCES `tests` (`id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

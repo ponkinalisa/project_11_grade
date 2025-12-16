@@ -173,7 +173,7 @@ if (isset($_POST['logout'])) {
                     </div>
                     <div class="profile-info">
                         <h1 class="profile-name">
-                            <?php echo htmlspecialchars($user_data['name'] . ' ' . $user_data['surname'] . ' ' . ($user_data['patronymic'] ?? '')); ?>
+                            <?php echo htmlspecialchars($user_data['name'] .  ' ' . ($user_data['patronymic'] ?? '') . ' ' . $user_data['surname']); ?>
                         </h1>
                         <div class="profile-email">Логин: <?php echo htmlspecialchars($user_data['login']); ?></div>
                     </div>
@@ -308,7 +308,7 @@ if (isset($_POST['logout'])) {
                                     }
                                 ?>
                                 <tr>
-                                    <td><?php echo date('d.m.Y H:i', strtotime($result['date'])); ?></td>
+                                    <td><?php echo date('d.m.Y', strtotime($result['date'])); ?></td>
                                     <td><?php echo htmlspecialchars($result['test_name']); ?></td>
                                     <td><?php echo htmlspecialchars($result['author_first'] . ' ' . $result['author_last']); ?></td>
                                     <td><?php echo $result['score']; ?>/<?php echo $result['count_tasks']; ?></td>

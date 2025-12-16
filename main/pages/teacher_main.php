@@ -46,10 +46,17 @@ $tests = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="user-info">
                         <div class="user-avatar"><?php echo(mb_substr($_SESSION['i'], 0, 1) . mb_substr($_SESSION['f'], 0, 1)); ?></div>
                         <div class="user-name"><?php echo($_SESSION['i'] . ' ' . $_SESSION['f']); ?></div>
-                    <a class="test-btn delete-btn" href="../php/where.php">
+                    <a class="test-btn delete-btn" href="../php/logout.php">
                         <span>Выйти</span>
                     </a>
                     </div>
+                    <?php
+                    if ($_SESSION['status'] == 'admin'){
+                        echo('<a class="btn btn-secondary" href="admin.php">
+                        <span>Вернуться в админ-панель</span>
+                    </a>');
+                    }
+                    ?>
                 </div>
             </div>
         </div>
