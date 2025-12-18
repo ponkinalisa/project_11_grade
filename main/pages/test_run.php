@@ -7,6 +7,7 @@ if (!isset($_SESSION['login'])){
     header('Location: ../../index.php');
     exit;
 }
+date_default_timezone_set('Etc/GMT-7');
 
 $test_id = $_GET['test_id'] ?? null;
 $test_data = null;
@@ -29,8 +30,13 @@ if ($test_id) {
         if ($existing_attempt and $existing_attempt['mark'] == null){
             $variant = $existing_attempt['variant'];
             $tasks_data = json_decode($variant, true);
-
+            $now = new DateTime();
+            $start_date = new DateTime($existing_attempt['date']);
+            $interval = $start_date->diff($now);
+            $seconds = ($interval->days * 86400) + ($interval->h * 3600) + ($interval->i * 60) + $interval->s;
+            $time_for_test = $test_data['time'] * 60 - $seconds;
         }elseif (!$existing_attempt){
+            $time_for_test = $test_data['time'] * 60;
         
         $sql = "SELECT * FROM types WHERE test_id = :test_id";
         $stmt = $pdo->prepare($sql);
@@ -73,8 +79,8 @@ if ($test_id) {
         }
         shuffle($tasks_data);
         $variant = json_encode($tasks_data,  JSON_UNESCAPED_UNICODE);
-        $sql = "INSERT INTO test_results (student_id, test_id, variant) 
-                VALUES (:student_id, :test_id, :variant)";
+        $sql = "INSERT INTO test_results (student_id, test_id, variant, date) 
+                VALUES (:student_id, :test_id, :variant, NOW())";
         
             $stmt = $pdo->prepare($sql);
             $stmt->execute([
@@ -86,7 +92,6 @@ if ($test_id) {
         }
         }
 
-        
 
     } catch (PDOException $e) {
         echo 'Ошибка при загрузке теста: ' . $e->getMessage();
@@ -350,7 +355,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
         var currentTaskIndex = 0;
         const totalTasks = <?php echo count($tasks_data); ?>;
         var answeredTasks = new Array();
-        var timeLeft = <?php echo $test_data['time'] * 60; ?>; 
+        var timeLeft = <?php echo $time_for_test; ?>; 
         var timerInterval;
         var testStarted = false;
         
@@ -519,7 +524,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
             }
             
             if (savedTime) {
-                timeLeft = parseInt(savedTime);
+                timeLeft = <?php echo $time_for_test; ?>; 
                 const hours = Math.floor(timeLeft / 3600);
                 const minutes = Math.floor((timeLeft % 3600) / 60);
                 const seconds = timeLeft % 60;

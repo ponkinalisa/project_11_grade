@@ -113,6 +113,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($status == 'student'){
             header('Location: main/pages/student_main.php');
+        }elseif ($status == 'admin'){
+            header('Location: main/pages/admin.php');
         }else{
             header('Location: main/pages/teacher_main.php');
         }

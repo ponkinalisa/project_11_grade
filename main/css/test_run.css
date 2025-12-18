@@ -163,7 +163,7 @@
 }
 
 .task-image {
-    max-width: 100%;
+    max-width: 350px;
     height: auto;
     border-radius: 8px;
     margin-bottom: 20px;
@@ -289,4 +289,9 @@
     border-radius: 6px;
     display: none;
     z-index: 1001;
+}
+@media(max-width: 450px){
+    .task-image {
+        max-width: 100%;
+    }
 }

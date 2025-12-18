@@ -124,7 +124,7 @@ try {
         </div>
 
         <div class="admin-actions">
-            <a href="../php.logout.php" class="btn btn-secondary">
+            <a href="../php/logout.php" class="btn btn-secondary">
                 Выйти
             </a>
         </div>
