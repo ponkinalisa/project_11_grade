@@ -3,7 +3,7 @@ require_once '../php/config.php';
 
 session_start();
 
-if (!isset($_SESSION['login']) and $_SESSION['status'] != 'student'){
+if (!isset($_SESSION['login']) || $_SESSION['status'] == 'student'){
     header('Location: ../../index.php');
     exit;
 }
@@ -226,8 +226,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $test_id) {
                 'path_to_img' => $path_to_img
             ]);
         }
-        header('Location: teacher_main.php');
-        exit;
+        if ($_SESSION['status'] == 'admin'){
+            header('Location: ../pages/tests.php');
+            exit;
+        }else{
+            header('Location: ../pages/teacher_main.php');
+            exit;
+        }
 
     } catch (PDOException $e) {
         echo '<div class="error-message">Ошибка при обновлении теста: ' . $e->getMessage() . '</div>';

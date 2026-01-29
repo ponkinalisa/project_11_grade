@@ -7,7 +7,12 @@ if (isset($_SESSION['login'])){
    if ($_SESSION['status'] == 'student'){
             header('Location: main/pages/student_main.php');
     }else{
-        header('Location: main/pages/teacher_main.php');
+        if ($_SESSION['status'] == 'teacher'){
+            header('Location: main/pages/teacher_main.php');
+        }
+        else{
+            header('Location: main/pages/admin.php');
+        }
     }
     exit;
 }
@@ -102,16 +107,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
             $_SESSION['id'] = $user['id'];
+            $_SESSION['status'] = $status;
         }else{
             $_SESSION['id'] = $user['id'];
+            $_SESSION['status'] = $user['status'];
         }
         $_SESSION['login'] = $login;
         $_SESSION['i'] = $i;
         $_SESSION['f'] = $f;
         $_SESSION['o'] = $o;
-        $_SESSION['status'] = $status;
 
-        if ($status == 'student'){
+        if ($_SESSION['status'] == 'student'){
             header('Location: main/pages/student_main.php');
         }elseif ($status == 'admin'){
             header('Location: main/pages/admin.php');

@@ -60,6 +60,7 @@ try {
         
         .admin-actions {
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
         }
@@ -124,6 +125,12 @@ try {
         </div>
 
         <div class="admin-actions">
+            <a href="users.php" class="btn btn-primary">
+                Пользователи
+            </a><br>
+            <a href="tests.php" class="btn btn-primary">
+                Тесты
+            </a><br>
             <a href="../php/logout.php" class="btn btn-secondary">
                 Выйти
             </a>

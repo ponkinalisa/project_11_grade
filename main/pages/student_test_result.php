@@ -3,7 +3,7 @@ require_once '../php/config.php';
 
 session_start();
 
-if (!isset($_SESSION['login']) and $_SESSION['status'] != 'teacher'){
+if (!isset($_SESSION['login'])){
     header('Location: ../../index.php');
     exit;
 }

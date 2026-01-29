@@ -57,9 +57,13 @@ $stmt->execute(['test_id' => $test_id]);
 $sql = "DELETE FROM tests WHERE id = :test_id AND author_id = :author_id";
 $stmt = $pdo->prepare($sql);
 $stmt->execute(['test_id' => $test_id, 'author_id' => $_SESSION['id']]);
-        
-        header('Location: ../pages/teacher_main.php');
-        exit;
+if ($_SESSION['status'] == 'admin'){
+    header('Location: ../pages/tests.php');
+    exit;
+}else{
+    header('Location: ../pages/teacher_main.php');
+    exit;
+}
         
     } catch (PDOException $e) {
         die("Ошибка при удалении теста: " . $e->getMessage());
